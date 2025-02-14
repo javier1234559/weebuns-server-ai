@@ -8,6 +8,7 @@ import {
   TextToSpeechDto,
   TextToSpeechResponseDto,
 } from 'src/ai/dto/text-to-speech.dto';
+import { Readable } from 'stream';
 
 @Injectable()
 export class TtsService {
@@ -30,6 +31,9 @@ export class TtsService {
     try {
       console.log('Converting text to speech:', JSON.stringify(dto, null, 2));
       let audioUrl = '';
+      if (!dto.voiceId) {
+        throw new Error('Voice ID is required');
+      }
       const audioStream = await this.client.textToSpeech.convert(dto.voiceId, {
         voice_settings: dto.voiceSettings,
         text: dto.text,
@@ -59,13 +63,15 @@ export class TtsService {
         fieldname: 'audio',
         encoding: '7bit',
         size: audioBuffer.length,
-        stream: null,
+        stream: Readable.from(audioBuffer),
         destination: '',
         filename: '',
         path: '',
       };
-
       const uploadResult = await this.uploadSerivce.uploadFile(file);
+      if (!uploadResult.data) {
+        throw new Error('Upload failed - no data returned');
+      }
       audioUrl = uploadResult.data.url;
 
       return {

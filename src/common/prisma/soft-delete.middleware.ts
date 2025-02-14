@@ -33,16 +33,18 @@ export const createSoftDeleteMiddleware = (prisma: PrismaClient) => {
         break;
 
       case 'update':
-        // Kiểm tra tồn tại bằng prisma instance
-        const exist = await prisma.essay.findFirst({
-          where: {
-            id: params.args.where.id,
-            NOT: { status: ContentStatus.deleted },
-          },
-        });
+        {
+          // Kiểm tra tồn tại bằng prisma instance
+          const exist = await prisma.essay.findFirst({
+            where: {
+              id: params.args.where.id,
+              NOT: { status: ContentStatus.deleted },
+            },
+          });
 
-        if (!exist) {
-          throw new Error('Record not found or already deleted');
+          if (!exist) {
+            throw new Error('Record not found or already deleted');
+          }
         }
 
         return next({

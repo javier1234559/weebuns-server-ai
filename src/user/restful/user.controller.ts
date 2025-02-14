@@ -22,18 +22,18 @@ import {
 import { AuthGuard } from 'src/common/auth/auth.guard';
 import { RolesGuard } from 'src/common/auth/role.guard';
 import { Roles, UserRole } from 'src/common/decorators/role.decorator';
-import { CreateUserDto } from 'src/models/user/dtos/create-user.dto';
-import { FindAllUsersDto } from 'src/models/user/dtos/find-all-user.dto';
-import { UpdateProfileUserDto } from 'src/models/user/dtos/update-profile-user.dto';
-import { UpdateUserDto } from 'src/models/user/dtos/update-user.dto';
+import { CreateUserDto } from 'src/user/dtos/create-user.dto';
+import { FindAllUsersDto } from 'src/user/dtos/find-all-user.dto';
+import { UpdateProfileUserDto } from 'src/user/dtos/update-profile-user.dto';
+import { UpdateUserDto } from 'src/user/dtos/update-user.dto';
 import {
   CreateUserResponse,
   DeleteUserResponse,
   UpdateUserResponse,
   UserResponse,
   UsersResponse,
-} from 'src/models/user/dtos/user-response.dto';
-import { UserService } from 'src/models/user/user.service';
+} from 'src/user/dtos/user-response.dto';
+import { UserService } from 'src/user/user.service';
 
 @Controller('users')
 @ApiTags('users')

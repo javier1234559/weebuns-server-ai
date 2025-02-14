@@ -4,17 +4,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { $Enums, AuthProvider, UserRole } from '@prisma/client';
 
 import { LanguageCode } from 'src/common/enum/common';
-import { CorrectionCredit } from 'src/correction-credit/entities/correction-credit.entity';
-import { CorrectionReply } from 'src/correction-reply/entities/correction-reply.entity';
-import { Correction } from 'src/correction/entities/correction.entity';
-import { CourseProgress } from 'src/course-progress/entities/course-progress.entity';
-import { Course } from 'src/course/entities/course.entity';
-import { Essay } from 'src/essay/entities/essay.entity';
-import { LessonComment } from 'src/lesson-comment/entities/lesson-comment.entity';
-import { Note } from 'src/note/entities/note.entity';
-import { Space } from 'src/space/entities/space.entity';
-import { Subscription } from 'src/subscription/entities/subscription.entity';
-import { Vocabulary } from 'src/vocabulary/entities/vocabulary.entity';
 
 import { IUser } from '../user.interface';
 
@@ -133,80 +122,80 @@ export class User implements IUser {
   })
   deletedAt: Date | null;
 
-  // Relationships
-  @ApiProperty({
-    type: () => [Course],
-    nullable: true,
-  })
-  courses?: Course[];
+  // // Relationships
+  // @ApiProperty({
+  //   type: () => [Course],
+  //   nullable: true,
+  // })
+  // courses?: Course[];
 
-  @ApiProperty({
-    type: () => [CourseProgress],
-    nullable: true,
-    description: 'Progress tracking for enrolled courses',
-  })
-  courseProgress?: CourseProgress[];
+  // @ApiProperty({
+  //   type: () => [CourseProgress],
+  //   nullable: true,
+  //   description: 'Progress tracking for enrolled courses',
+  // })
+  // courseProgress?: CourseProgress[];
 
-  @ApiProperty({
-    type: () => [Note],
-    nullable: true,
-    description: 'Notes created by the user',
-  })
-  notes?: Note[];
+  // @ApiProperty({
+  //   type: () => [Note],
+  //   nullable: true,
+  //   description: 'Notes created by the user',
+  // })
+  // notes?: Note[];
 
-  @ApiProperty({
-    type: () => [Vocabulary],
-    nullable: true,
-    description: 'Vocabulary items created by the user',
-  })
-  vocabularies?: Vocabulary[];
+  // @ApiProperty({
+  //   type: () => [Vocabulary],
+  //   nullable: true,
+  //   description: 'Vocabulary items created by the user',
+  // })
+  // vocabularies?: Vocabulary[];
 
-  @ApiProperty({
-    type: () => [Space],
-    nullable: true,
-    description: 'Learning spaces created by the user',
-  })
-  spaces?: Space[];
+  // @ApiProperty({
+  //   type: () => [Space],
+  //   nullable: true,
+  //   description: 'Learning spaces created by the user',
+  // })
+  // spaces?: Space[];
 
-  @ApiProperty({
-    type: () => [Essay],
-    nullable: true,
-    description: 'Essays written by the user',
-  })
-  essays?: Essay[];
+  // @ApiProperty({
+  //   type: () => [Essay],
+  //   nullable: true,
+  //   description: 'Essays written by the user',
+  // })
+  // essays?: Essay[];
 
-  @ApiProperty({
-    type: () => [Correction],
-    nullable: true,
-    description: 'Corrections made by the user',
-  })
-  corrections?: Correction[];
+  // @ApiProperty({
+  //   type: () => [Correction],
+  //   nullable: true,
+  //   description: 'Corrections made by the user',
+  // })
+  // corrections?: Correction[];
 
-  @ApiProperty({
-    type: () => [CorrectionReply],
-    nullable: true,
-    description: 'Replies to corrections',
-  })
-  correctionReplies?: CorrectionReply[];
+  // @ApiProperty({
+  //   type: () => [CorrectionReply],
+  //   nullable: true,
+  //   description: 'Replies to corrections',
+  // })
+  // correctionReplies?: CorrectionReply[];
 
-  @ApiProperty({
-    type: () => LessonComment,
-    isArray: true,
-    required: false,
-  })
-  lessonComments?: LessonComment[];
+  // @ApiProperty({
+  //   type: () => LessonComment,
+  //   isArray: true,
+  //   required: false,
+  // })
+  // lessonComments?: LessonComment[];
 
-  @ApiProperty({
-    type: () => [Subscription],
-    nullable: true,
-    description: 'User subscriptions',
-  })
-  subscriptions?: Subscription[];
+  // @ApiProperty({
+  //   type: () => [Subscription],
+  //   nullable: true,
+  //   description: 'User subscriptions',
+  // })
+  // subscriptions?: Subscription[];
 
-  @ApiProperty({
-    type: () => [CorrectionCredit],
-    nullable: true,
-    description: 'Correction credits owned by the user',
-  })
-  correctionCredits?: CorrectionCredit[];
+  // @ApiProperty({
+  //   type: () => [CorrectionCredit],
+  //   nullable: true,
+  //   description: 'Correction credits owned by the user',
+  // })
+  // correctionCredits?: CorrectionCredit[];
 }

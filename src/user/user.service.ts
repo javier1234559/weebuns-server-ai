@@ -56,7 +56,9 @@ export class UserService {
     const queryOptions = {
       where: {
         ...notDeletedQuery,
-        ...searchQuery(search, ['username', 'email', 'firstName', 'lastName']),
+        ...(search
+          ? searchQuery(search, ['username', 'email', 'firstName', 'lastName'])
+          : {}),
       },
       orderBy: { createdAt: 'desc' },
       ...paginationQuery(page, perPage),

@@ -28,7 +28,7 @@ export class UserRefreshTokenResponse {
 
 export class UserResponse {
   @ApiProperty()
-  user: User;
+  user: User | null;
 }
 
 export class LogoutResponse {

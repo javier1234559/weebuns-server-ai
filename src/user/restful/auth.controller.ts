@@ -13,28 +13,28 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
 import { AuthGuard } from 'src/common/auth/auth.guard';
-import { AuthService } from 'src/models/user/auth.service';
+import { AuthService } from 'src/user/auth.service';
 import {
   LogoutResponse,
   UserLoginResponse,
   UserRefreshTokenResponse,
   UserRegisterResponse,
   UserResponse,
-} from 'src/models/user/dtos/auth-response.dto';
-import { LoginFacebookDto } from 'src/models/user/dtos/login-facebook.dto';
-import { LoginGoogleDto } from 'src/models/user/dtos/login-google.dto';
-import { LoginDto } from 'src/models/user/dtos/login.dto';
+} from 'src/user/dtos/auth-response.dto';
+import { LoginFacebookDto } from 'src/user/dtos/login-facebook.dto';
+import { LoginGoogleDto } from 'src/user/dtos/login-google.dto';
+import { LoginDto } from 'src/user/dtos/login.dto';
 import {
   RequestResetPasswordResponse,
   ResetPasswordResponse,
   VerifyResetCodeResponse,
-} from 'src/models/user/dtos/password-reset-response.dto';
+} from 'src/user/dtos/password-reset-response.dto';
 import {
   RequestResetPasswordDto,
   ResetPasswordDto,
   VerifyResetCodeDto,
-} from 'src/models/user/dtos/password-reset.dto';
-import { RegisterDto } from 'src/models/user/dtos/register.dto';
+} from 'src/user/dtos/password-reset.dto';
+import { RegisterDto } from 'src/user/dtos/register.dto';
 
 @Controller('auth')
 @ApiTags('auth')

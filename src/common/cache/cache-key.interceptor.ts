@@ -62,7 +62,7 @@ export class CacheKeyInterceptor implements NestInterceptor {
       return next.handle().pipe(
         tap(async (data) => {
           try {
-            await this.cacheManager.set(cacheKey, data, { ttl });
+            await this.cacheManager.set(cacheKey, data, ttl);
             this.logger.debug(`Cached data for key: ${cacheKey}`);
           } catch (error) {
             this.logger.error(`Failed to cache data: ${error.message}`);

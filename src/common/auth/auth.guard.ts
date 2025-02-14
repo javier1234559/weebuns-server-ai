@@ -57,13 +57,14 @@ export class AuthGuard implements CanActivate {
       // console.log('Payload:', payload);
 
       //update last login time
-      this.prisma.user.update({
+      await this.prisma.user.update({
         where: { id: String(payload.sub) },
         data: { lastLogin: new Date() },
       });
 
       return true;
     } catch (error) {
+      console.log('Error:', error);
       throw new UnauthorizedException('Invalid token provided.');
     }
 

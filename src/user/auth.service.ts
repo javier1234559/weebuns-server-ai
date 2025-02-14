@@ -43,6 +43,7 @@ export class AuthService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly mailService: MailService,
   ) {}
+
   private generateTokens(user: any) {
     const payload = {
       email: user.email,
@@ -61,16 +62,13 @@ export class AuthService {
   }
 
   async getCurrentUser(authPayload: IAuthPayload): Promise<UserResponse> {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: String(authPayload.sub) },
-      });
-      return {
-        user,
-      };
-    } catch (error) {
-      return null;
-    }
+    const user = await this.prisma.user.findUnique({
+      where: { id: String(authPayload.sub) },
+    });
+
+    return {
+      user: user,
+    };
   }
 
   async login(loginDto: LoginDto, res: Response): Promise<UserLoginResponse> {
@@ -306,6 +304,7 @@ export class AuthService {
         refresh_token: newRefreshToken,
       };
     } catch (error) {
+      console.log('Error:', error);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

@@ -36,6 +36,9 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-return': 'off',
       'require-await': 'off',
       '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
     },
   },
 );

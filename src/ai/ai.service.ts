@@ -46,7 +46,7 @@ export class AiService implements AiServiceInterface {
       console.log(JSON.stringify(completion, null, 2));
       return {
         original_text: dto.text,
-        translated_text: completion.choices[0]?.message?.content?.trim(),
+        translated_text: completion.choices[0]?.message?.content?.trim() || '',
         source_language: dto.sourceLanguage,
         target_language: dto.targetLanguage,
       };
