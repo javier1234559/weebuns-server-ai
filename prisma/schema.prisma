@@ -32,475 +32,475 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  user
-  admin
-  teacher
-}
-
-enum ContentStatus {
-  draft
-  published
-  private
-  deleted
-}
-
-enum AuthProvider {
-  local
-  google
-  facebook
-}
-
-enum SubscriptionType {
-  FREE
-  BASIC
-  PREMIUM
-}
-
-enum PaymentType {
-  stripe
-  momo
-  zalopay
-}
-
-// Reference Data
-model ReferenceData {
-  id         String   @id @default(uuid())
-  type       String // 'language', 'level', 'target', 'topic'
-  code       String // ENGLISH, BEGINNER, BUSINESS,...
-  name       String
-  metadata   Json? // Metadata tùy theo type
-  isActive   Boolean  @default(true) @map("is_active")
-  orderIndex Int      @default(0) @map("order_index")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  @@unique([type, code])
-  @@index([type, isActive, orderIndex])
-  @@map("reference_data")
-}
-
-model User {
-  id              String       @id @default(uuid())
-  username        String       @unique
-  email           String       @unique
-  passwordHash    String?      @map("password_hash")
-  role            UserRole     @default(user)
-  authProvider    AuthProvider @default(local) @map("auth_provider")
-  authProviderId  String?      @map("auth_provider_id")
-  firstName       String?      @map("first_name")
-  lastName        String?      @map("last_name")
-  profilePicture  String?      @map("profile_picture")
-  isEmailVerified Boolean      @default(false) @map("is_email_verified")
-  nativeLanguage  String       @map("native_language")
-  lastLogin       DateTime?    @map("last_login")
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
-  deletedAt       DateTime?    @map("deleted_at")
-
-  // Relations
-  spaces            Space[]
-  courses           Course[]
-  units             Unit[]
-  lessons           Lesson[]
-  courseProgress    CourseProgress[]
-  notes             Note[]
-  vocabularies      Vocabulary[]
-  essays            Essay[]
-  corrections       Correction[]
-  correctionReplies CorrectionReply[]
-  lessonComments    LessonComment[]
-  subscriptions     Subscription[]
-  correctionCredits CorrectionCredit[]
-
-  @@map("users")
-}
-
-model Subscription {
-  id                String           @id @default(uuid())
-  userId            String           @map("user_id")
-  type              SubscriptionType
-  startDate         DateTime         @map("start_date")
-  endDate           DateTime?        @map("end_date")
-  status            String // ACTIVE, EXPIRED, CANCELLED
-  correctionBalance Int              @default(0) @map("correction_balance")
-
-  // Relations
-  user     User                  @relation(fields: [userId], references: [id])
-  payments SubscriptionPayment[]
-
-  @@index([userId, status])
-  @@map("subscriptions")
-}
-
-model SubscriptionPayment {
-  id             String      @id @default(uuid())
-  subscriptionId String      @map("subscription_id")
-  amount         Decimal
-  paymentType    PaymentType @map("payment_type")
-  paymentDate    DateTime    @map("payment_date")
-  status         String // SUCCESS, PENDING, FAILED
-  transactionId  String?     @map("transaction_id") // Add this
-  currency       String      @default("VND") // Add this
-
-  // Relations  
-  subscription Subscription @relation(fields: [subscriptionId], references: [id])
-
-  @@map("subscription_payments")
-}
-
-model CorrectionCredit {
-  id          String      @id @default(uuid())
-  userId      String      @map("user_id")
-  amount      Int
-  price       Decimal
-  paymentId   String?     @map("payment_id")
-  paymentType PaymentType @map("payment_type")
-  expireDate  DateTime?   @map("expire_date")
-  createdAt   DateTime    @default(now()) @map("created_at")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id])
-
-  @@map("correction_credits")
-}
-
-model Course {
-  id           String        @id @default(uuid())
-  title        String
-  description  String?
-  thumbnailUrl String?       @map("thumbnail_url")
-  language     String        @map("language")
-  minLevel     String        @map("min_level")
-  maxLevel     String        @map("max_level")
-  topics       String[]      @map("topics")
-  courseType   String        @map("course_type")
-  isPremium    Boolean       @default(false) @map("is_premium")
-  totalWeight  Int?          @default(0) @map("total_weight")
-  status       ContentStatus @default(draft)
-  createdBy    String        @map("created_by")
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  deletedAt    DateTime?     @map("deleted_at")
-
-  // Relations
-  creator  User             @relation(fields: [createdBy], references: [id])
-  units    Unit[]
-  progress CourseProgress[]
-  spaces   SpaceCourse[]
-  Note     Note[]
-
-  @@index([status, language, minLevel, maxLevel])
-  @@index([deletedAt])
-  @@index([createdBy])
-  @@map("courses")
-}
-
-model CourseProgress {
-  id              String    @id @default(uuid())
-  userId          String    @map("user_id")
-  courseId        String    @map("course_id")
-  currentUnitId   String?   @map("current_unit_id")
-  currentLessonId String?   @map("current_lesson_id")
-  nextUnitId      String?   @map("next_unit_id")
-  nextLessonId    String?   @map("next_lesson_id")
-  lastAccessedAt  DateTime? @map("last_accessed_at")
-  completedWeight Int       @default(0) @map("completed_weight")
-
-  completedUnits   String[] @default([]) @map("completed_units")
-  completedLessons String[] @default([]) @map("completed_lessons")
-
-  // Relations
-  user          User    @relation(fields: [userId], references: [id])
-  course        Course  @relation(fields: [courseId], references: [id])
-  currentUnit   Unit?   @relation("CurrentUnit", fields: [currentUnitId], references: [id])
-  nextUnit      Unit?   @relation("NextUnit", fields: [nextUnitId], references: [id])
-  currentLesson Lesson? @relation("CurrentLesson", fields: [currentLessonId], references: [id])
-  nextLesson    Lesson? @relation("NextLesson", fields: [nextLessonId], references: [id])
-
-  @@unique([userId, courseId])
-  @@index([userId])
-  @@index([courseId])
-  @@map("course_progress")
-}
-
-model Unit {
-  id         String   @id @default(uuid())
-  courseId   String   @map("course_id")
-  title      String
-  orderIndex Int      @map("order_index")
-  isPremium  Boolean  @default(false) @map("is_premium")
-  createdBy  String   @map("created_by")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  course         Course           @relation(fields: [courseId], references: [id])
-  creator        User             @relation(fields: [createdBy], references: [id])
-  lessons        Lesson[]
-  courseProgress CourseProgress[] @relation("CurrentUnit")
-  nextUnits      CourseProgress[] @relation("NextUnit")
-  Note           Note[]
-
-  @@index([courseId, orderIndex])
-  @@index([createdBy])
-  @@map("units")
-}
-
-model Lesson {
-  id           String        @id @default(uuid())
-  unitId       String        @map("unit_id")
-  title        String
-  summary      String?
-  content      Json
-  orderIndex   Int           @map("order_index")
-  isPremium    Boolean       @default(false) @map("is_premium")
-  isRequired   Boolean       @default(true) @map("is_required")
-  status       ContentStatus @default(draft)
-  createdBy    String        @map("created_by")
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  lessonWeight Int           @default(0) @map("lesson_weight")
-
-  // Relations
-  unit              Unit             @relation(fields: [unitId], references: [id])
-  creator           User             @relation(fields: [createdBy], references: [id])
-  notes             Note[]
-  comments          LessonComment[]
-  currentInProgress CourseProgress[] @relation("CurrentLesson")
-  nextInProgress    CourseProgress[] @relation("NextLesson")
-
-  @@index([unitId, orderIndex])
-  @@index([unitId, isPremium])
-  @@map("lessons")
-}
-
-model LessonComment {
-  id        String   @id @default(uuid())
-  lessonId  String   @map("lesson_id")
-  createdBy String   @map("created_by")
-  content   String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  lesson  Lesson @relation(fields: [lessonId], references: [id])
-  creator User   @relation(fields: [createdBy], references: [id])
-
-  @@index([lessonId])
-  @@index([createdBy])
-  @@map("lesson_comments")
-}
-
-// Space Management
-model Space {
-  id           String    @id @default(uuid())
-  name         String
-  description  String?
-  language     String    @map("language")
-  target       String    @map("target")
-  currentLevel String    @map("current_level")
-  topics       String[]  @map("topics")
-  targetLevel  String    @map("target_level")
-  createdBy    String    @map("created_by")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  deletedAt    DateTime? @map("deleted_at")
-
-  // Relations
-  creator      User          @relation(fields: [createdBy], references: [id])
-  essays       Essay[]
-  vocabularies Vocabulary[]
-  notes        Note[]
-  courses      SpaceCourse[]
-
-  @@index([language, target, currentLevel])
-  @@index([createdBy])
-  @@index([deletedAt])
-  @@map("spaces")
-}
-
-model SpaceCourse {
-  id       String   @id @default(uuid())
-  spaceId  String   @map("space_id")
-  courseId String   @map("course_id")
-  joinedAt DateTime @default(now()) @map("joined_at")
-
-  // Relations
-  space  Space  @relation(fields: [spaceId], references: [id])
-  course Course @relation(fields: [courseId], references: [id])
-
-  @@unique([spaceId, courseId])
-  @@index([spaceId])
-  @@index([courseId])
-  @@map("space_courses")
-}
-
-model Note {
-  id           String    @id @default(uuid())
-  spaceId      String?   @map("space_id")
-  lessonId     String    @map("lesson_id")
-  courseId     String?   @map("course_id")
-  unitId       String?   @map("unit_id")
-  title        String
-  content      String
-  tags         String[]  @default([])
-  isBookmarked Boolean   @default(false) @map("is_bookmarked")
-  createdBy    String    @map("created_by")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  deletedAt    DateTime? @map("deleted_at")
-
-  // Relations
-  lesson  Lesson  @relation(fields: [lessonId], references: [id])
-  creator User    @relation(fields: [createdBy], references: [id])
-  space   Space?  @relation(fields: [spaceId], references: [id])
-  course  Course? @relation(fields: [courseId], references: [id])
-  unit    Unit?   @relation(fields: [unitId], references: [id])
-
-  @@index([lessonId])
-  @@index([createdBy])
-  @@index([spaceId])
-  @@map("notes")
-}
-
-model Vocabulary {
-  id              String    @id @default(uuid())
-  spaceId         String    @map("space_id")
-  term            String
-  meaning         String[]
-  exampleSentence String?   @map("example_sentence")
-  imageUrl        String?   @map("image_url")
-  referenceLink   String?   @map("reference_link")
-  referenceName   String?   @map("reference_name")
-  tags            String[]  @default([])
-  repetitionLevel Int       @default(0) @map("repetition_level")
-  nextReview      DateTime? @map("next_review")
-  createdBy       String    @map("created_by")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-  deletedAt       DateTime? @map("deleted_at")
-
-  // Relations
-  space   Space @relation(fields: [spaceId], references: [id])
-  creator User  @relation(fields: [createdBy], references: [id])
-
-  @@index([spaceId])
-  @@index([createdBy])
-  @@index([term])
-  @@index([nextReview])
-  @@map("vocabularies")
-}
-
-model Essay {
-  id          String        @id @default(uuid())
-  spaceId     String        @map("space_id")
-  title       String
-  upvoteCount Int           @default(0) @map("upvote_count")
-  summary     String?
-  content     String
-  coverUrl    String?       @map("cover_url")
-  status      ContentStatus
-  language    String        @map("language") // reference to language code
-  createdBy   String        @map("created_by")
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
-  deletedAt   DateTime?     @map("deleted_at")
-
-  // Relations
-  space       Space          @relation(fields: [spaceId], references: [id])
-  author      User           @relation(fields: [createdBy], references: [id])
-  hashtags    EssayHashtag[]
-  corrections Correction[]
-
-  @@index([spaceId])
-  @@index([createdBy])
-  @@index([status, language])
-  @@map("essays")
-}
-
-model EssayHashtag {
-  id        String   @id @default(uuid())
-  essayId   String   @map("essay_id")
-  hashtagId String   @map("hashtag_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  // Relations
-  essay   Essay   @relation(fields: [essayId], references: [id])
-  hashtag Hashtag @relation(fields: [hashtagId], references: [id])
-
-  @@unique([essayId, hashtagId])
-  @@map("essay_hashtags")
-}
-
-model Hashtag {
-  id         String   @id @default(uuid())
-  name       String   @unique
-  usageCount Int      @default(0) @map("usage_count")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  essays EssayHashtag[]
-
-  @@index([name])
-  @@index([usageCount])
-  @@map("hashtags")
-}
-
-model Correction {
-  id             String    @id @default(uuid())
-  essayId        String    @map("essay_id")
-  overallComment String?   @map("overall_comment")
-  rating         Float?
-  createdBy      String    @map("created_by")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-  deletedAt      DateTime? @map("deleted_at")
-
-  // Relations
-  essay     Essay                @relation(fields: [essayId], references: [id])
-  creator   User                 @relation(fields: [createdBy], references: [id])
-  sentences CorrectionSentence[]
-  replies   CorrectionReply[]
-
-  @@index([essayId])
-  @@index([createdBy])
-  @@map("corrections")
-}
-
-model CorrectionSentence {
-  id            String   @id @default(uuid())
-  correctionId  String   @map("correction_id")
-  index         Int
-  originalText  String   @map("original_text")
-  correctedText String?  @map("corrected_text")
-  explanation   String?
-  isCorrect     Boolean  @default(false) @map("is_correct")
-  rating        Float?
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  correction Correction @relation(fields: [correctionId], references: [id])
-
-  @@index([correctionId, index])
-  @@map("correction_sentences")
-}
-
-model CorrectionReply {
-  id           String   @id @default(uuid())
-  correctionId String   @map("correction_id")
-  comment      String
-  createdBy    String   @map("created_by")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  correction Correction @relation(fields: [correctionId], references: [id])
-  creator    User       @relation(fields: [createdBy], references: [id])
-
-  @@index([correctionId])
-  @@index([createdBy])
-  @@map("correction_replies")
-}
+// enum UserRole {
+//   user
+//   admin
+//   teacher
+// }
+
+// enum ContentStatus {
+//   draft
+//   published
+//   private
+//   deleted
+// }
+
+// enum AuthProvider {
+//   local
+//   google
+//   facebook
+// }
+
+// enum SubscriptionType {
+//   FREE
+//   BASIC
+//   PREMIUM
+// }
+
+// enum PaymentType {
+//   stripe
+//   momo
+//   zalopay
+// }
+
+// // Reference Data
+// model ReferenceData {
+//   id         String   @id @default(uuid())
+//   type       String // 'language', 'level', 'target', 'topic'
+//   code       String // ENGLISH, BEGINNER, BUSINESS,...
+//   name       String
+//   metadata   Json? // Metadata tùy theo type
+//   isActive   Boolean  @default(true) @map("is_active")
+//   orderIndex Int      @default(0) @map("order_index")
+//   createdAt  DateTime @default(now()) @map("created_at")
+//   updatedAt  DateTime @updatedAt @map("updated_at")
+
+//   @@unique([type, code])
+//   @@index([type, isActive, orderIndex])
+//   @@map("reference_data")
+// }
+
+// model User {
+//   id              String       @id @default(uuid())
+//   username        String       @unique
+//   email           String       @unique
+//   passwordHash    String?      @map("password_hash")
+//   role            UserRole     @default(user)
+//   authProvider    AuthProvider @default(local) @map("auth_provider")
+//   authProviderId  String?      @map("auth_provider_id")
+//   firstName       String?      @map("first_name")
+//   lastName        String?      @map("last_name")
+//   profilePicture  String?      @map("profile_picture")
+//   isEmailVerified Boolean      @default(false) @map("is_email_verified")
+//   nativeLanguage  String       @map("native_language")
+//   lastLogin       DateTime?    @map("last_login")
+//   createdAt       DateTime     @default(now()) @map("created_at")
+//   updatedAt       DateTime     @updatedAt @map("updated_at")
+//   deletedAt       DateTime?    @map("deleted_at")
+
+//   // Relations
+//   spaces            Space[]
+//   courses           Course[]
+//   units             Unit[]
+//   lessons           Lesson[]
+//   courseProgress    CourseProgress[]
+//   notes             Note[]
+//   vocabularies      Vocabulary[]
+//   essays            Essay[]
+//   corrections       Correction[]
+//   correctionReplies CorrectionReply[]
+//   lessonComments    LessonComment[]
+//   subscriptions     Subscription[]
+//   correctionCredits CorrectionCredit[]
+
+//   @@map("users")
+// }
+
+// model Subscription {
+//   id                String           @id @default(uuid())
+//   userId            String           @map("user_id")
+//   type              SubscriptionType
+//   startDate         DateTime         @map("start_date")
+//   endDate           DateTime?        @map("end_date")
+//   status            String // ACTIVE, EXPIRED, CANCELLED
+//   correctionBalance Int              @default(0) @map("correction_balance")
+
+//   // Relations
+//   user     User                  @relation(fields: [userId], references: [id])
+//   payments SubscriptionPayment[]
+
+//   @@index([userId, status])
+//   @@map("subscriptions")
+// }
+
+// model SubscriptionPayment {
+//   id             String      @id @default(uuid())
+//   subscriptionId String      @map("subscription_id")
+//   amount         Decimal
+//   paymentType    PaymentType @map("payment_type")
+//   paymentDate    DateTime    @map("payment_date")
+//   status         String // SUCCESS, PENDING, FAILED
+//   transactionId  String?     @map("transaction_id") // Add this
+//   currency       String      @default("VND") // Add this
+
+//   // Relations  
+//   subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+//   @@map("subscription_payments")
+// }
+
+// model CorrectionCredit {
+//   id          String      @id @default(uuid())
+//   userId      String      @map("user_id")
+//   amount      Int
+//   price       Decimal
+//   paymentId   String?     @map("payment_id")
+//   paymentType PaymentType @map("payment_type")
+//   expireDate  DateTime?   @map("expire_date")
+//   createdAt   DateTime    @default(now()) @map("created_at")
+
+//   // Relations
+//   user User @relation(fields: [userId], references: [id])
+
+//   @@map("correction_credits")
+// }
+
+// model Course {
+//   id           String        @id @default(uuid())
+//   title        String
+//   description  String?
+//   thumbnailUrl String?       @map("thumbnail_url")
+//   language     String        @map("language")
+//   minLevel     String        @map("min_level")
+//   maxLevel     String        @map("max_level")
+//   topics       String[]      @map("topics")
+//   courseType   String        @map("course_type")
+//   isPremium    Boolean       @default(false) @map("is_premium")
+//   totalWeight  Int?          @default(0) @map("total_weight")
+//   status       ContentStatus @default(draft)
+//   createdBy    String        @map("created_by")
+//   createdAt    DateTime      @default(now()) @map("created_at")
+//   updatedAt    DateTime      @updatedAt @map("updated_at")
+//   deletedAt    DateTime?     @map("deleted_at")
+
+//   // Relations
+//   creator  User             @relation(fields: [createdBy], references: [id])
+//   units    Unit[]
+//   progress CourseProgress[]
+//   spaces   SpaceCourse[]
+//   Note     Note[]
+
+//   @@index([status, language, minLevel, maxLevel])
+//   @@index([deletedAt])
+//   @@index([createdBy])
+//   @@map("courses")
+// }
+
+// model CourseProgress {
+//   id              String    @id @default(uuid())
+//   userId          String    @map("user_id")
+//   courseId        String    @map("course_id")
+//   currentUnitId   String?   @map("current_unit_id")
+//   currentLessonId String?   @map("current_lesson_id")
+//   nextUnitId      String?   @map("next_unit_id")
+//   nextLessonId    String?   @map("next_lesson_id")
+//   lastAccessedAt  DateTime? @map("last_accessed_at")
+//   completedWeight Int       @default(0) @map("completed_weight")
+
+//   completedUnits   String[] @default([]) @map("completed_units")
+//   completedLessons String[] @default([]) @map("completed_lessons")
+
+//   // Relations
+//   user          User    @relation(fields: [userId], references: [id])
+//   course        Course  @relation(fields: [courseId], references: [id])
+//   currentUnit   Unit?   @relation("CurrentUnit", fields: [currentUnitId], references: [id])
+//   nextUnit      Unit?   @relation("NextUnit", fields: [nextUnitId], references: [id])
+//   currentLesson Lesson? @relation("CurrentLesson", fields: [currentLessonId], references: [id])
+//   nextLesson    Lesson? @relation("NextLesson", fields: [nextLessonId], references: [id])
+
+//   @@unique([userId, courseId])
+//   @@index([userId])
+//   @@index([courseId])
+//   @@map("course_progress")
+// }
+
+// model Unit {
+//   id         String   @id @default(uuid())
+//   courseId   String   @map("course_id")
+//   title      String
+//   orderIndex Int      @map("order_index")
+//   isPremium  Boolean  @default(false) @map("is_premium")
+//   createdBy  String   @map("created_by")
+//   createdAt  DateTime @default(now()) @map("created_at")
+//   updatedAt  DateTime @updatedAt @map("updated_at")
+
+//   // Relations
+//   course         Course           @relation(fields: [courseId], references: [id])
+//   creator        User             @relation(fields: [createdBy], references: [id])
+//   lessons        Lesson[]
+//   courseProgress CourseProgress[] @relation("CurrentUnit")
+//   nextUnits      CourseProgress[] @relation("NextUnit")
+//   Note           Note[]
+
+//   @@index([courseId, orderIndex])
+//   @@index([createdBy])
+//   @@map("units")
+// }
+
+// model Lesson {
+//   id           String        @id @default(uuid())
+//   unitId       String        @map("unit_id")
+//   title        String
+//   summary      String?
+//   content      Json
+//   orderIndex   Int           @map("order_index")
+//   isPremium    Boolean       @default(false) @map("is_premium")
+//   isRequired   Boolean       @default(true) @map("is_required")
+//   status       ContentStatus @default(draft)
+//   createdBy    String        @map("created_by")
+//   createdAt    DateTime      @default(now()) @map("created_at")
+//   updatedAt    DateTime      @updatedAt @map("updated_at")
+//   lessonWeight Int           @default(0) @map("lesson_weight")
+
+//   // Relations
+//   unit              Unit             @relation(fields: [unitId], references: [id])
+//   creator           User             @relation(fields: [createdBy], references: [id])
+//   notes             Note[]
+//   comments          LessonComment[]
+//   currentInProgress CourseProgress[] @relation("CurrentLesson")
+//   nextInProgress    CourseProgress[] @relation("NextLesson")
+
+//   @@index([unitId, orderIndex])
+//   @@index([unitId, isPremium])
+//   @@map("lessons")
+// }
+
+// model LessonComment {
+//   id        String   @id @default(uuid())
+//   lessonId  String   @map("lesson_id")
+//   createdBy String   @map("created_by")
+//   content   String
+//   createdAt DateTime @default(now()) @map("created_at")
+//   updatedAt DateTime @updatedAt @map("updated_at")
+
+//   // Relations
+//   lesson  Lesson @relation(fields: [lessonId], references: [id])
+//   creator User   @relation(fields: [createdBy], references: [id])
+
+//   @@index([lessonId])
+//   @@index([createdBy])
+//   @@map("lesson_comments")
+// }
+
+// // Space Management
+// model Space {
+//   id           String    @id @default(uuid())
+//   name         String
+//   description  String?
+//   language     String    @map("language")
+//   target       String    @map("target")
+//   currentLevel String    @map("current_level")
+//   topics       String[]  @map("topics")
+//   targetLevel  String    @map("target_level")
+//   createdBy    String    @map("created_by")
+//   createdAt    DateTime  @default(now()) @map("created_at")
+//   updatedAt    DateTime  @updatedAt @map("updated_at")
+//   deletedAt    DateTime? @map("deleted_at")
+
+//   // Relations
+//   creator      User          @relation(fields: [createdBy], references: [id])
+//   essays       Essay[]
+//   vocabularies Vocabulary[]
+//   notes        Note[]
+//   courses      SpaceCourse[]
+
+//   @@index([language, target, currentLevel])
+//   @@index([createdBy])
+//   @@index([deletedAt])
+//   @@map("spaces")
+// }
+
+// model SpaceCourse {
+//   id       String   @id @default(uuid())
+//   spaceId  String   @map("space_id")
+//   courseId String   @map("course_id")
+//   joinedAt DateTime @default(now()) @map("joined_at")
+
+//   // Relations
+//   space  Space  @relation(fields: [spaceId], references: [id])
+//   course Course @relation(fields: [courseId], references: [id])
+
+//   @@unique([spaceId, courseId])
+//   @@index([spaceId])
+//   @@index([courseId])
+//   @@map("space_courses")
+// }
+
+// model Note {
+//   id           String    @id @default(uuid())
+//   spaceId      String?   @map("space_id")
+//   lessonId     String    @map("lesson_id")
+//   courseId     String?   @map("course_id")
+//   unitId       String?   @map("unit_id")
+//   title        String
+//   content      String
+//   tags         String[]  @default([])
+//   isBookmarked Boolean   @default(false) @map("is_bookmarked")
+//   createdBy    String    @map("created_by")
+//   createdAt    DateTime  @default(now()) @map("created_at")
+//   updatedAt    DateTime  @updatedAt @map("updated_at")
+//   deletedAt    DateTime? @map("deleted_at")
+
+//   // Relations
+//   lesson  Lesson  @relation(fields: [lessonId], references: [id])
+//   creator User    @relation(fields: [createdBy], references: [id])
+//   space   Space?  @relation(fields: [spaceId], references: [id])
+//   course  Course? @relation(fields: [courseId], references: [id])
+//   unit    Unit?   @relation(fields: [unitId], references: [id])
+
+//   @@index([lessonId])
+//   @@index([createdBy])
+//   @@index([spaceId])
+//   @@map("notes")
+// }
+
+// model Vocabulary {
+//   id              String    @id @default(uuid())
+//   spaceId         String    @map("space_id")
+//   term            String
+//   meaning         String[]
+//   exampleSentence String?   @map("example_sentence")
+//   imageUrl        String?   @map("image_url")
+//   referenceLink   String?   @map("reference_link")
+//   referenceName   String?   @map("reference_name")
+//   tags            String[]  @default([])
+//   repetitionLevel Int       @default(0) @map("repetition_level")
+//   nextReview      DateTime? @map("next_review")
+//   createdBy       String    @map("created_by")
+//   createdAt       DateTime  @default(now()) @map("created_at")
+//   updatedAt       DateTime  @updatedAt @map("updated_at")
+//   deletedAt       DateTime? @map("deleted_at")
+
+//   // Relations
+//   space   Space @relation(fields: [spaceId], references: [id])
+//   creator User  @relation(fields: [createdBy], references: [id])
+
+//   @@index([spaceId])
+//   @@index([createdBy])
+//   @@index([term])
+//   @@index([nextReview])
+//   @@map("vocabularies")
+// }
+
+// model Essay {
+//   id          String        @id @default(uuid())
+//   spaceId     String        @map("space_id")
+//   title       String
+//   upvoteCount Int           @default(0) @map("upvote_count")
+//   summary     String?
+//   content     String
+//   coverUrl    String?       @map("cover_url")
+//   status      ContentStatus
+//   language    String        @map("language") // reference to language code
+//   createdBy   String        @map("created_by")
+//   createdAt   DateTime      @default(now()) @map("created_at")
+//   updatedAt   DateTime      @updatedAt @map("updated_at")
+//   deletedAt   DateTime?     @map("deleted_at")
+
+//   // Relations
+//   space       Space          @relation(fields: [spaceId], references: [id])
+//   author      User           @relation(fields: [createdBy], references: [id])
+//   hashtags    EssayHashtag[]
+//   corrections Correction[]
+
+//   @@index([spaceId])
+//   @@index([createdBy])
+//   @@index([status, language])
+//   @@map("essays")
+// }
+
+// model EssayHashtag {
+//   id        String   @id @default(uuid())
+//   essayId   String   @map("essay_id")
+//   hashtagId String   @map("hashtag_id")
+//   createdAt DateTime @default(now()) @map("created_at")
+
+//   // Relations
+//   essay   Essay   @relation(fields: [essayId], references: [id])
+//   hashtag Hashtag @relation(fields: [hashtagId], references: [id])
+
+//   @@unique([essayId, hashtagId])
+//   @@map("essay_hashtags")
+// }
+
+// model Hashtag {
+//   id         String   @id @default(uuid())
+//   name       String   @unique
+//   usageCount Int      @default(0) @map("usage_count")
+//   createdAt  DateTime @default(now()) @map("created_at")
+//   updatedAt  DateTime @updatedAt @map("updated_at")
+
+//   // Relations
+//   essays EssayHashtag[]
+
+//   @@index([name])
+//   @@index([usageCount])
+//   @@map("hashtags")
+// }
+
+// model Correction {
+//   id             String    @id @default(uuid())
+//   essayId        String    @map("essay_id")
+//   overallComment String?   @map("overall_comment")
+//   rating         Float?
+//   createdBy      String    @map("created_by")
+//   createdAt      DateTime  @default(now()) @map("created_at")
+//   updatedAt      DateTime  @updatedAt @map("updated_at")
+//   deletedAt      DateTime? @map("deleted_at")
+
+//   // Relations
+//   essay     Essay                @relation(fields: [essayId], references: [id])
+//   creator   User                 @relation(fields: [createdBy], references: [id])
+//   sentences CorrectionSentence[]
+//   replies   CorrectionReply[]
+
+//   @@index([essayId])
+//   @@index([createdBy])
+//   @@map("corrections")
+// }
+
+// model CorrectionSentence {
+//   id            String   @id @default(uuid())
+//   correctionId  String   @map("correction_id")
+//   index         Int
+//   originalText  String   @map("original_text")
+//   correctedText String?  @map("corrected_text")
+//   explanation   String?
+//   isCorrect     Boolean  @default(false) @map("is_correct")
+//   rating        Float?
+//   createdAt     DateTime @default(now()) @map("created_at")
+//   updatedAt     DateTime @updatedAt @map("updated_at")
+
+//   // Relations
+//   correction Correction @relation(fields: [correctionId], references: [id])
+
+//   @@index([correctionId, index])
+//   @@map("correction_sentences")
+// }
+
+// model CorrectionReply {
+//   id           String   @id @default(uuid())
+//   correctionId String   @map("correction_id")
+//   comment      String
+//   createdBy    String   @map("created_by")
+//   createdAt    DateTime @default(now()) @map("created_at")
+//   updatedAt    DateTime @updatedAt @map("updated_at")
+
+//   // Relations
+//   correction Correction @relation(fields: [correctionId], references: [id])
+//   creator    User       @relation(fields: [createdBy], references: [id])
+
+//   @@index([correctionId])
+//   @@index([createdBy])
+//   @@map("correction_replies")
+// }
