@@ -101,8 +101,7 @@ export class AuthService {
     registerDto: RegisterDto,
     res: Response,
   ): Promise<UserRegisterResponse> {
-    const { username, email, password, firstName, lastName, nativeLanguage } =
-      registerDto;
+    const { username, email, password, firstName, lastName } = registerDto;
 
     const existingUser = await this.prisma.user.findFirst({
       where: { OR: [{ email }] },
@@ -112,7 +111,7 @@ export class AuthService {
       throw new ConflictException('Username or email already exists');
     }
 
-    const mappedLanguage = LanguageUtil.mapISOToLanguageCode(nativeLanguage);
+    // const mappedLanguage = LanguageUtil.mapISOToLanguageCode(nativeLanguage);
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = await this.prisma.user.create({
@@ -122,7 +121,7 @@ export class AuthService {
           passwordHash: hashedPassword,
           firstName: firstName,
           lastName: lastName,
-          nativeLanguage: mappedLanguage,
+          // nativeLanguage: mappedLanguage,
           role: UserRole.user,
           authProvider: AuthProvider.local,
         },
@@ -255,10 +254,12 @@ export class AuthService {
           username: userData.name,
           firstName: userData.firstName,
           lastName: userData.lastName,
-          nativeLanguage: mappedLanguage,
+          // nativeLanguage: mappedLanguage,
           role: UserRole.user,
           authProvider: userData.provider,
           profilePicture: userData.picture,
+          passwordHash: '', // Add required passwordHash field
+          isEmailVerified: true, // Since this is OAuth login
         },
       });
     }
