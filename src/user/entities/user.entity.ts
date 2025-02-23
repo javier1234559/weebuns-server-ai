@@ -38,11 +38,11 @@ export class User implements IUser {
   @ApiProperty({ example: 'john@example.com' })
   email: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String)
   @ApiProperty({
-    nullable: true,
+    example: '$2b$10$sOToCWV4/2hJjVo7TJSqOuUbRq8ZRxM6EdfXq1/cIfmBF.5z8L5MK',
   })
-  passwordHash: string | null;
+  passwordHash: string;
 
   @Field(() => UserRole)
   @ApiProperty({
@@ -58,7 +58,7 @@ export class User implements IUser {
     example: AuthProvider.local,
     description: 'Authentication provider used',
   })
-  authProvider: $Enums.AuthProvider;
+  authProvider: AuthProvider;
 
   @Field(() => String, { nullable: true })
   @ApiProperty({
@@ -93,13 +93,13 @@ export class User implements IUser {
   })
   isEmailVerified: boolean;
 
-  @Field(() => LanguageCode)
-  @ApiProperty({
-    enum: LanguageCode,
-    example: LanguageCode.VIETNAMESE,
-    description: "User's native language",
-  })
-  nativeLanguage: string;
+  // @Field(() => LanguageCode)
+  // @ApiProperty({
+  //   enum: LanguageCode,
+  //   example: LanguageCode.VIETNAMESE,
+  //   description: "User's native language",
+  // })
+  // nativeLanguage: string;
 
   @Field(() => Date, { nullable: true })
   @ApiProperty({
@@ -108,11 +108,15 @@ export class User implements IUser {
   lastLogin: Date | null;
 
   @Field(() => Date)
-  @ApiProperty()
+  @ApiProperty({
+    example: '2024-01-01T00:00:00.000Z',
+  })
   createdAt: Date;
 
   @Field(() => Date)
-  @ApiProperty()
+  @ApiProperty({
+    example: '2024-01-01T00:00:00.000Z',
+  })
   updatedAt: Date;
 
   @Field(() => Date, { nullable: true })
@@ -122,6 +126,7 @@ export class User implements IUser {
   })
   deletedAt: Date | null;
 
+  
   // // Relationships
   // @ApiProperty({
   //   type: () => [Course],
