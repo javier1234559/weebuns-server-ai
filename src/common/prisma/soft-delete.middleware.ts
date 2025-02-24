@@ -2,9 +2,9 @@ import { ContentStatus, Prisma, PrismaClient } from '@prisma/client';
 
 export const createSoftDeleteMiddleware = (prisma: PrismaClient) => {
   return async (params: Prisma.MiddlewareParams, next: any) => {
-    if (params.model !== 'Essay') {
-      return next(params);
-    }
+    // if (params.model !== 'Essay') {
+    //   return next(params);
+    // }
 
     switch (params.action) {
       case 'findUnique':
@@ -15,7 +15,7 @@ export const createSoftDeleteMiddleware = (prisma: PrismaClient) => {
             ...params.args,
             where: {
               ...params.args.where,
-              NOT: { status: ContentStatus.deleted },
+              // NOT: { status: ContentStatus.deleted },
             },
           },
         });
@@ -34,17 +34,17 @@ export const createSoftDeleteMiddleware = (prisma: PrismaClient) => {
 
       case 'update':
         {
-          // Kiểm tra tồn tại bằng prisma instance
-          const exist = await prisma.essay.findFirst({
-            where: {
-              id: params.args.where.id,
-              NOT: { status: ContentStatus.deleted },
-            },
-          });
+          // // Kiểm tra tồn tại bằng prisma instance
+          // const exist = await prisma.essay.findFirst({
+          //   where: {
+          //     id: params.args.where.id,
+          //     NOT: { status: ContentStatus.deleted },
+          //   },
+          // });
 
-          if (!exist) {
-            throw new Error('Record not found or already deleted');
-          }
+          // if (!exist) {
+          //   throw new Error('Record not found or already deleted');
+          // }
         }
 
         return next({
