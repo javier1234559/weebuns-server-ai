@@ -8,7 +8,7 @@ import { createSoftDeleteMiddleware } from 'src/common/prisma/soft-delete.middle
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
     super();
-    this.$use(createSoftDeleteMiddleware(this));
+    // this.$use(createSoftDeleteMiddleware(this));
   }
 
   async onModuleInit() {
