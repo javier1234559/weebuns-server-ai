@@ -1,5 +1,6 @@
 import { LessonType, Prisma, SkillType } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
 export class CreateLessonDto {
   @ApiProperty({

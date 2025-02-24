@@ -181,7 +181,7 @@ export class LessonService implements ILessonService {
       throw new ForbiddenException('You can only publish your own lessons');
     }
 
-    if (lesson.status !== ContentStatus.DRAFT) {
+    if (lesson.status !== ContentStatus.draft) {
       throw new ForbiddenException(
         'Chỉ có thể publish bài học ở trạng thái draft',
       );
