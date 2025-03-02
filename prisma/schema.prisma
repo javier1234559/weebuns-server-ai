@@ -202,21 +202,23 @@ model StudentProfile {
 }
 
 model Lesson {
-  id          String        @id @default(uuid()) @db.Uuid
+  id          String     @id @default(uuid()) @db.Uuid
   skill       SkillType
   title       String
-  description String?       @db.Text
-  lessonType  LessonType    @map("lesson_type")
+  description String?    @db.Text
+  lessonType  LessonType @map("lesson_type")
   level       String
-  levelType   String        @map("level_type")
+  levelType   String     @map("level_type")
   topic       String
-  timeLimit   Int?          @map("time_limit")
+  timeLimit   Int?       @map("time_limit")
   content     Json?
-  status      ContentStatus @default(draft)
-  createdById String        @map("created_by") @db.Uuid
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
-  deletedAt   DateTime?     @map("deleted_at")
+
+  thumbnailUrl String?       @map("thumbnail_url")
+  status       ContentStatus @default(draft)
+  createdById  String        @map("created_by") @db.Uuid
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  deletedAt    DateTime?     @map("deleted_at")
 
   createdBy   User               @relation(fields: [createdById], references: [id])
   submissions LessonSubmission[]
