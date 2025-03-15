@@ -1,0 +1,352 @@
+// download extension DBML LIVE PREVIEW AND VSCODE-DBML
+// or show in dbdiagram.io
+
+// Enums Section
+enum user_role {
+  user
+  admin
+  teacher
+}
+
+enum content_status {
+  draft
+  published
+  private
+  deleted
+}
+
+enum auth_provider {
+  local
+  google
+  facebook
+}
+
+enum payment_type {
+  bank
+  momo
+  zalopay
+}
+
+enum payment_status {
+  pending
+  completed
+  failed
+  refunded
+}
+
+enum skill_type {
+  listening
+  reading
+  writing
+  speaking
+}
+
+enum lesson_type {
+  practice
+  test
+}
+
+enum submission_status {
+  draft
+  submitted
+  completed
+  scored
+}
+
+enum notification_type {
+  system
+  advertisement
+  submission
+  comment_reply
+  comment_mention
+}
+
+enum reaction_type {
+  like
+  teacher_heart
+}
+
+enum token_transaction_type {
+  purchase
+  submission_fee
+  ai_chat_fee
+  upgrade_suggestion_fee
+  reward
+}
+
+enum feature_code {
+  submission
+  ai_chat
+  upgrade_suggestion
+}
+
+// Reference Data
+Table reference_data {
+  id uuid [pk]
+  type string
+  code string
+  name string
+  metadata json
+  is_active boolean [default: true]
+  order_index int [default: 0]
+  created_at datetime [default: `now()`]
+  updated_at datetime
+
+  indexes {
+    (type, code) [unique]
+    (type, is_active, order_index)
+  }
+}
+
+// User Management
+Table user {
+  id uuid [pk]
+  username string [unique]
+  email string [unique]
+  password_hash string
+  role user_role [default: 'user']
+  auth_provider auth_provider [default: 'local']
+  auth_provider_id string
+  first_name string
+  last_name string
+  profile_picture string
+  is_email_verified boolean [default: false]
+  last_login datetime
+  created_at datetime [default: `now()`]
+  updated_at datetime
+  deleted_at datetime
+
+  indexes {
+    (deleted_at, role)
+    email
+  }
+}
+
+Table teacher_profile {
+  id uuid [pk]
+  user_id uuid [ref: > user.id]
+  specialization skill_type[]
+  qualification text
+  teaching_experience integer
+  hourly_rate decimal
+  created_at datetime [default: `now()`]
+  updated_at datetime
+  deleted_at datetime
+
+  indexes {
+    user_id [unique]
+    deleted_at
+  }
+}
+
+Table student_profile {
+  id uuid [pk]
+  user_id uuid [ref: > user.id]
+  target_study_duration integer
+  target_reading float
+  target_listening float
+  target_writing float
+  target_speaking float
+  next_exam_date datetime
+  tokens_balance integer [default: 0]
+  created_at datetime [default: `now()`]
+  updated_at datetime
+  deleted_at datetime
+
+  indexes {
+    user_id [unique]
+    deleted_at
+  }
+}
+
+// Content Management
+Table lesson {
+  id uuid [pk]
+  skill skill_type
+  title string
+  description text
+  lesson_type lesson_type
+  level string [ref: > reference_data.code, note: 'Reference to level code']
+  topic string [ref: > reference_data.code, note: 'Reference to topic code']
+  time_limit integer
+  content json [note: 'Structured based on skill_type']
+  status content_status [default: 'draft']
+  created_by uuid [ref: > user.id]
+  created_at datetime [default: `now()`]
+  updated_at datetime
+  deleted_at datetime
+
+  indexes {
+    (skill, status, deleted_at)
+    (level, topic)
+    created_by
+  }
+}
+
+Table lesson_submission {
+  id uuid [pk]
+  user_id uuid [ref: > user.id]
+  lesson_id uuid [ref: > lesson.id]
+  submission_type skill_type
+  status submission_status [default: 'draft']
+  content json [note: 'Submission content based on type']
+  feedback json [note: 'Teacher feedback structure']
+  tokens_used integer [default: 0]
+  submitted_at datetime
+  graded_at datetime
+  graded_by uuid [ref: > user.id]
+  created_at datetime [default: `now()`]
+  updated_at datetime
+
+  indexes {
+    (user_id, lesson_id)
+    (status, submission_type)
+  }
+}
+
+// Vocabulary System
+Table vocabulary {
+  id uuid [pk]
+  term string
+  meaning string[]
+  example_sentence text
+  image_url string
+  reference_link string
+  reference_name string
+  tags string[]
+  repetition_level integer [default: 0]
+  next_review datetime
+  created_by uuid [ref: > user.id]
+  created_at datetime [default: `now()`]
+  updated_at datetime
+
+  indexes {
+    term
+    created_by
+    next_review
+  }
+}
+
+Table vocabulary_practice {
+  id uuid [pk]
+  user_id uuid [ref: > user.id]
+  vocabulary_id uuid [ref: > vocabulary.id]
+  success_rate float
+  last_practiced datetime
+  next_review datetime
+  created_at datetime [default: `now()`]
+
+  indexes {
+    (user_id, vocabulary_id)
+    next_review
+  }
+}
+
+// Comments and Notifications
+Table comment {
+  id uuid [pk]
+  user_id uuid [ref: > user.id]
+  parent_id uuid [ref: > comment.id]
+  entity_id string [note: 'Example: writing-explorer, writing-detail-123']
+  content text
+  is_edited boolean [default: false]
+  created_at datetime [default: `now()`]
+  updated_at datetime
+  deleted_at datetime
+
+  indexes {
+    entity_id
+    parent_id
+    user_id
+    created_at
+    deleted_at
+  }
+}
+
+Table comment_reaction {
+  id uuid [pk]
+  comment_id uuid [ref: > comment.id]
+  user_id uuid [ref: > user.id]
+  type reaction_type
+  created_at datetime [default: `now()`]
+
+  indexes {
+    (comment_id, user_id, type) [unique]
+  }
+}
+
+Table notification {
+  id uuid [pk]
+  type notification_type
+  title string
+  content text
+  thumbnail_url string
+  action_url string
+  is_global boolean [default: false]
+  user_id uuid [ref: > user.id]
+  is_read boolean [default: false]
+  created_by uuid [ref: > user.id]
+  created_at datetime [default: `now()`]
+  expires_at datetime
+
+  indexes {
+    (type, user_id)
+    is_global
+    created_at
+  }
+}
+
+// Payment System
+Table token_transaction {
+  id uuid [pk]
+  user_id uuid [ref: > user.id]
+  amount integer
+  type token_transaction_type
+  payment_method payment_type
+  status payment_status
+  transaction_id string
+  discount_code string
+  final_amount integer
+  created_at datetime [default: `now()`]
+
+  indexes {
+    user_id
+    status
+    type
+  }
+}
+
+Table discount_code {
+  id uuid [pk]
+  code string [unique]
+  amount integer
+  value float
+  is_percentage boolean [default: false]
+  usage_limit integer
+  current_usage integer [default: 0]  
+  start_date datetime
+  end_date datetime
+  created_at datetime [default: `now()`]
+  updated_at datetime
+
+  indexes {
+    code
+  }
+}
+
+Table feature_token_config {
+  id uuid [pk]
+  feature_code feature_code
+  token_cost integer
+  is_percentage boolean [default: false]
+  description string
+  is_active boolean [default: true]
+  created_at datetime [default: `now()`]
+  updated_at datetime
+
+  indexes {
+    feature_code [unique]
+  }
+}
+
+Ref: "lesson"."time_limit" < "lesson"."level"
