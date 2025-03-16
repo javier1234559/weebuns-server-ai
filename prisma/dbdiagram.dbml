@@ -187,22 +187,56 @@ Table lesson_submission {
   id uuid [pk]
   user_id uuid [ref: > user.id]
   lesson_id uuid [ref: > lesson.id]
-  submission_type skill_type
-  status submission_status [default: 'draft']
-  content json [note: 'Submission content based on type']
-  feedback json [note: 'Teacher feedback structure']
+  submission_type skill_type [default: 'writing', note: 'Restrict to writing for now']
+  status submission_status [default: 'submitted']
+  content json [note: 'Submission content']
+  feedback json [note: 'Teacher feedback']
   tokens_used integer [default: 0]
   submitted_at datetime
   graded_at datetime
   graded_by uuid [ref: > user.id]
   created_at datetime [default: `now()`]
   updated_at datetime
+  deleted_at datetime  -- Thêm để soft delete
 
   indexes {
     (user_id, lesson_id)
     (status, submission_type)
   }
 }
+
+// user for user draft save
+Table writing_draft {
+  id uuid [pk]
+  user_id uuid [ref: > user.id]
+  lesson_id uuid [ref: > lesson.id]
+  content json [note: 'Draft content']
+  created_at datetime [default: `now()`]
+  updated_at datetime
+  deleted_at datetime
+
+  indexes {
+    (user_id, lesson_id)
+  }
+}
+
+//for public forum
+Table forum_submission {
+  id uuid [pk]
+  lesson_id uuid [ref: > lesson.id]
+  user_id uuid [ref: > user.id]
+  content text [note: 'User’s essay']
+  created_at datetime [default: `now()`]
+  updated_at datetime
+  deleted_at datetime
+
+  indexes {
+    lesson_id
+    user_id
+    created_at
+  }
+}
+
 
 // Vocabulary System
 Table vocabulary {
