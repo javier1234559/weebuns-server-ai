@@ -1,9 +1,10 @@
 import { ContentStatus, LessonType, Prisma, SkillType } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../../user/entities/user.entity';
-import { LessonSubmission } from '../../lesson-submission/entities/lesson-submission.entity';
-import { ReferenceData } from '../../reference-data/entities/reference-data.entity';
+
 import { ILesson } from 'src/models/lesson/interface/lesson.interface';
+import { User } from 'src/models/user/entities/user.entity';
+import { LessonSubmission } from 'src/models/lesson-submission/entities/lesson-submission.entity';
+import { ReferenceData } from 'src/models/reference-data/entities/reference-data.entity';
 
 export class Lesson implements ILesson {
   @ApiProperty({
@@ -52,6 +53,11 @@ export class Lesson implements ILesson {
     nullable: true,
   })
   content: Prisma.JsonValue | null;
+  @ApiProperty({
+    type: 'string',
+    isArray: true,
+  })
+  tags: string[];
   @ApiProperty({
     type: 'string',
     nullable: true,

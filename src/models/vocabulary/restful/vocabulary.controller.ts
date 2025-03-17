@@ -40,7 +40,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Create a new vocabulary' })
   @ApiResponse({ status: 201, type: VocabularyDto })
   create(@Body() createVocabularyDto: CreateVocabularyDto, @Req() req) {
-    return this.vocabularyService.create(createVocabularyDto, req.USER);
+    return this.vocabularyService.create(createVocabularyDto, req.user);
   }
 
   @Get()
@@ -52,7 +52,7 @@ export class VocabularyController {
     @Query() filterDto: VocabularyFilterDto,
     @Req() req,
   ) {
-    return this.vocabularyService.findAll(paginationDto, req.USER, filterDto);
+    return this.vocabularyService.findAll(paginationDto, req.user, filterDto);
   }
 
   @Get('due')
@@ -60,7 +60,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Get all vocabularies due for review' })
   @ApiResponse({ status: 200, type: [VocabularyDto] })
   getDueVocabularies(@Req() req) {
-    return this.vocabularyService.getDueVocabularies(req.USER);
+    return this.vocabularyService.getDueVocabularies(req.user);
   }
 
   @Get(':id')
@@ -68,7 +68,7 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Get a vocabulary by id' })
   @ApiResponse({ status: 200, type: VocabularyDto })
   findOne(@Param('id') id: string, @Req() req) {
-    return this.vocabularyService.findOne(id, req.USER);
+    return this.vocabularyService.findOne(id, req.user);
   }
 
   @Patch(':id')
@@ -80,7 +80,7 @@ export class VocabularyController {
     @Body() updateVocabularyDto: UpdateVocabularyDto,
     @Req() req,
   ) {
-    return this.vocabularyService.update(id, updateVocabularyDto, req.USER);
+    return this.vocabularyService.update(id, updateVocabularyDto, req.user);
   }
 
   @Patch(':id/review')
@@ -95,7 +95,7 @@ export class VocabularyController {
     return this.vocabularyService.updateReviewStatus(
       id,
       updateReviewDto.repetitionLevel,
-      req.USER,
+      req.user,
     );
   }
 
@@ -104,6 +104,6 @@ export class VocabularyController {
   @ApiOperation({ summary: 'Delete a vocabulary' })
   @ApiResponse({ status: 200, type: VocabularyDto })
   remove(@Param('id') id: string, @Req() req) {
-    return this.vocabularyService.remove(id, req.USER);
+    return this.vocabularyService.remove(id, req.user);
   }
 }

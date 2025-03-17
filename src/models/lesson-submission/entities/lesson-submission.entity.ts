@@ -1,7 +1,7 @@
 import { Prisma, SkillType, SubmissionStatus } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../../user/entities/user.entity';
-import { Lesson } from '../../lesson/entities/lesson.entity';
+import { User } from 'src/models/user/entities/user.entity';
+import { Lesson } from 'src/models/lesson/entities/lesson.entity';
 
 export class LessonSubmission {
   @ApiProperty({

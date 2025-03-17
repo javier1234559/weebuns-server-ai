@@ -87,6 +87,28 @@ export const referenceData: Prisma.ReferenceDataCreateInput[] = [
     isActive: true,
     orderIndex: 3,
   },
+  {
+    type: REFERENCE_TYPES.LEVEL,
+    code: 'A1',
+    name: 'A1 Level',
+    metadata: {
+      description: 'A1 level',
+      recommended_level: 'A1',
+    },
+    isActive: true,
+    orderIndex: 4,
+  },
+  {
+    type: REFERENCE_TYPES.LEVEL,
+    code: 'beginner',
+    name: 'Beginner Level Type',
+    metadata: {
+      description: 'Beginner level type',
+      recommended_level: 'beginner',
+    },
+    isActive: true,
+    orderIndex: 5,
+  },
 ];
 
 export const users: Prisma.UserCreateInput[] = [
@@ -107,7 +129,8 @@ export const users: Prisma.UserCreateInput[] = [
     username: 'teacher1',
     email: 'teacher@gmail.com',
     passwordHash:
-      '$2b$10$11zWAeJIiwBV7rI.TYlF4.nW/kLj67MvHs5j8BFcMeG9XgHXx8pci',
+
+      '$2b$10$TbcKtwojUtPrF5exijC8a.7dBBAhT8wRc6SfBZMo54zYiaM9/WG6G', //securePass123
     role: UserRole.teacher,
     authProvider: AuthProvider.local,
     firstName: 'Teacher',

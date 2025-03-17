@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
-import { Lesson } from '../../lesson/entities/lesson.entity';
+import { Lesson } from 'src/models/lesson/entities/lesson.entity';
 
 export class ReferenceData {
   @ApiProperty({
