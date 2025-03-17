@@ -213,6 +213,8 @@ model Lesson {
   timeLimit   Int?       @map("time_limit")
   content     Json?
 
+  tags String[]
+
   thumbnailUrl String?       @map("thumbnail_url")
   status       ContentStatus @default(draft)
   createdById  String        @map("created_by") @db.Uuid

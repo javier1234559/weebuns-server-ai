@@ -1,18 +1,19 @@
 import {
+  Body,
+  Controller,
+  Get,
+  Param,
   Post,
+  Patch,
+  Query,
+  Delete,
   UseGuards,
   Request,
-  Body,
-  Get,
-  Query,
-  Param,
-  Patch,
-  Delete,
-  Controller,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -20,112 +21,121 @@ import { AuthGuard } from 'src/common/auth/auth.guard';
 import { RolesGuard } from 'src/common/auth/role.guard';
 import { Roles, UserRole } from 'src/common/decorators/role.decorator';
 import { CreateLessonDto } from 'src/models/lesson/dto/create-lesson.dto';
-import { LessonResponseDto } from 'src/models/lesson/dto/lesson-response.dto';
-import { ListLessonQueryDto } from 'src/models/lesson/dto/list-lesson-query.dto';
-import { PaginatedResponseDto } from 'src/models/lesson/dto/paginated-lesson-response.dto';
+import { PaginatedLessonsResponseDto } from 'src/models/lesson/dto/paginated-lessons-response.dto';
+import { QueryLessonDto } from 'src/models/lesson/dto/query-lesson.dto';
+import { ResponseLessonDto } from 'src/models/lesson/dto/lesson-response.dto';
 import { UpdateLessonDto } from 'src/models/lesson/dto/update-lesson.dto';
 import { LessonService } from 'src/models/lesson/lesson.service';
-import { PaginationOutputDto } from 'src/common/dto/pagination.dto'; // Import PaginationOutputDto
 
 @Controller('lessons')
 @ApiTags('lessons')
-@UseGuards(AuthGuard, RolesGuard)
 @ApiBearerAuth()
+@UseGuards(AuthGuard, RolesGuard)
 export class LessonController {
   constructor(private readonly lessonService: LessonService) {}
 
   @Post()
-  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiOperation({ summary: 'Create a new lesson' })
   @ApiResponse({
     status: 201,
     description: 'Lesson created successfully',
-    type: LessonResponseDto,
+    type: ResponseLessonDto,
   })
-  async create(
+  async createLesson(
     @Request() req,
     @Body() createLessonDto: CreateLessonDto,
-  ): Promise<LessonResponseDto> {
-    const lesson = await this.lessonService.create(
-      req.user.id,
-      createLessonDto,
-    );
-    return new LessonResponseDto([lesson], new PaginationOutputDto()); // Pass the correct arguments
+  ): Promise<ResponseLessonDto> {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    return this.lessonService.createLesson(userId, userRole, createLessonDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all lessons' })
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.USER)
+  @ApiOperation({ summary: 'Get all lessons with filtering and pagination' })
   @ApiResponse({
     status: 200,
-    description: 'List of lessons',
-    type: PaginatedResponseDto,
+    description: 'Returns paginated lessons',
+    type: PaginatedLessonsResponseDto,
   })
-  async findAll(
-    @Query() query: ListLessonQueryDto,
-  ): Promise<PaginatedResponseDto<LessonResponseDto>> {
-    const result = await this.lessonService.findAll(query);
-    return {
-      ...result,
-      items: result.items.map(
-        (lesson) => new LessonResponseDto([lesson], new PaginationOutputDto()),
-      ), // Pass the correct arguments
-    };
+  async getLessons(
+    @Request() req,
+    @Query() queryDto: QueryLessonDto,
+  ): Promise<PaginatedLessonsResponseDto> {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    try {
+      return await this.lessonService.getLessons(userId, userRole, queryDto);
+    } catch (error) {
+      console.error('Error in getLessons:', error);
+      throw error;
+    }
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a lesson by id' })
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.USER)
+  @ApiOperation({ summary: 'Get a lesson by ID' })
+  @ApiParam({ name: 'id', description: 'Lesson ID' })
   @ApiResponse({
     status: 200,
-    description: 'Lesson found',
-    type: LessonResponseDto,
+    description: 'Returns the lesson',
+    type: ResponseLessonDto,
   })
-  async findOne(@Param('id') id: string): Promise<LessonResponseDto> {
-    const lesson = await this.lessonService.findOne(id);
-    return new LessonResponseDto([lesson], new PaginationOutputDto()); // Pass the correct arguments
+  @ApiResponse({ status: 404, description: 'Lesson not found' })
+  async getLessonById(
+    @Request() req,
+    @Param('id') id: string,
+  ): Promise<ResponseLessonDto> {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    return this.lessonService.getLessonById(id, userId, userRole);
   }
 
   @Patch(':id')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Update a lesson' })
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @ApiOperation({ summary: 'Update a lesson (partial update)' })
+  @ApiParam({ name: 'id', description: 'Lesson ID' })
   @ApiResponse({
     status: 200,
     description: 'Lesson updated successfully',
-    type: LessonResponseDto,
+    type: ResponseLessonDto,
   })
-  async update(
+  @ApiResponse({ status: 404, description: 'Lesson not found' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  async updateLesson(
     @Request() req,
     @Param('id') id: string,
     @Body() updateLessonDto: UpdateLessonDto,
-  ): Promise<LessonResponseDto> {
-    const lesson = await this.lessonService.update(
+  ): Promise<ResponseLessonDto> {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    return this.lessonService.updateLesson(
       id,
-      req.user.id,
+      userId,
+      userRole,
       updateLessonDto,
     );
-    return new LessonResponseDto([lesson], new PaginationOutputDto()); // Pass the correct arguments
   }
 
   @Delete(':id')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Delete a lesson' })
-  @ApiResponse({ status: 204, description: 'Lesson deleted successfully' })
-  async remove(@Request() req, @Param('id') id: string): Promise<void> {
-    await this.lessonService.remove(id, req.user.id);
-  }
-
-  @Post(':id/publish')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN)
-  @ApiOperation({ summary: 'Publish a lesson' })
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @ApiOperation({ summary: 'Delete a lesson (soft delete)' })
+  @ApiParam({ name: 'id', description: 'Lesson ID' })
   @ApiResponse({
     status: 200,
-    description: 'Lesson published successfully',
-    type: LessonResponseDto,
+    description: 'Lesson marked as deleted',
+    type: ResponseLessonDto,
   })
-  async publish(
+  @ApiResponse({ status: 404, description: 'Lesson not found' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  async deleteLesson(
     @Request() req,
     @Param('id') id: string,
-  ): Promise<LessonResponseDto> {
-    const lesson = await this.lessonService.publish(id, req.user.id);
-    return new LessonResponseDto([lesson], new PaginationOutputDto()); // Pass the correct arguments
+  ): Promise<ResponseLessonDto> {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    return this.lessonService.deleteLesson(id, userId, userRole);
   }
 }
