@@ -129,6 +129,7 @@ export const users: Prisma.UserCreateInput[] = [
     username: 'teacher1',
     email: 'teacher@gmail.com',
     passwordHash:
+
       '$2b$10$TbcKtwojUtPrF5exijC8a.7dBBAhT8wRc6SfBZMo54zYiaM9/WG6G', //securePass123
     role: UserRole.teacher,
     authProvider: AuthProvider.local,
