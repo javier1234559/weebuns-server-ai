@@ -115,15 +115,15 @@ enum FeatureCode {
 model ReferenceData {
   id         String   @id @default(uuid()) @db.Uuid
   type       String // 'language', 'level', 'target', 'topic'
-  code       String // ENGLISH, BEGINNER, BUSINESS,...
+  code       String   @unique // ENGLISH, BEGINNER, BUSINESS,...
   name       String
   metadata   Json? // Metadata tùy theo type
   isActive   Boolean  @default(true) @map("is_active")
   orderIndex Int      @default(0) @map("order_index")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
-
-  lessons Lesson[]
+  lessons    Lesson[] @relation("LessonLevel")
+  topics     Lesson[] @relation("LessonTopic")
 
   @@unique([type, code])
   @@index([type, isActive, orderIndex])
@@ -202,58 +202,59 @@ model StudentProfile {
 }
 
 model Lesson {
-  id          String     @id @default(uuid()) @db.Uuid
-  skill       SkillType
-  title       String
-  description String?    @db.Text
-  lessonType  LessonType @map("lesson_type")
-  level       String
-  levelType   String     @map("level_type")
-  topic       String
-  timeLimit   Int?       @map("time_limit")
-  content     Json?
-
-  tags String[]
-
+  id           String        @id @default(uuid()) @db.Uuid
+  skill        SkillType
+  title        String
+  description  String?
+  lessonType   LessonType
+  level        String        @map("level_code") // Reference to reference_data
+  topic        String        @map("topic_code") // Reference to reference_data
+  timeLimit    Int?          @map("time_limit")
+  content      Json // Structured based on skill_type
   thumbnailUrl String?       @map("thumbnail_url")
+  tags         String[]      @default([])
   status       ContentStatus @default(draft)
   createdById  String        @map("created_by") @db.Uuid
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
   deletedAt    DateTime?     @map("deleted_at")
 
+  // Relations
   createdBy   User               @relation(fields: [createdById], references: [id])
+  levelRef    ReferenceData      @relation("LessonLevel", fields: [level], references: [code])
+  topicRef    ReferenceData      @relation("LessonTopic", fields: [topic], references: [code])
   submissions LessonSubmission[]
-  levelRef    ReferenceData      @relation(fields: [levelType, level], references: [type, code])
 
   @@index([skill, status, deletedAt])
   @@index([level, topic])
   @@index([createdById])
-  @@map("lesson")
 }
 
 model LessonSubmission {
   id             String           @id @default(uuid()) @db.Uuid
-  userId         String           @map("user_id") @db.Uuid
   lessonId       String           @map("lesson_id") @db.Uuid
-  submissionType SkillType        @map("submission_type")
+  userId         String           @map("user_id") @db.Uuid
+  submissionType SkillType        @default(writing) @map("submission_type")
   status         SubmissionStatus @default(draft)
-  content        Json?
-  feedback       Json?
+  content        Json? // User's submission content
+  feedback       Json? // Teacher's feedback structure
   tokensUsed     Int              @default(0) @map("tokens_used")
   submittedAt    DateTime?        @map("submitted_at")
   gradedAt       DateTime?        @map("graded_at")
   gradedById     String?          @map("graded_by") @db.Uuid
   createdAt      DateTime         @default(now()) @map("created_at")
   updatedAt      DateTime         @updatedAt @map("updated_at")
+  deletedAt      DateTime?        @map("deleted_at")
 
-  user     User   @relation("UserSubmissions", fields: [userId], references: [id], onDelete: NoAction)
-  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: NoAction)
-  gradedBy User?  @relation("TeacherGraded", fields: [gradedById], references: [id], onDelete: NoAction)
+  // Relations
+  lesson   Lesson    @relation(fields: [lessonId], references: [id])
+  user     User      @relation("UserSubmissions", fields: [userId], references: [id])
+  gradedBy User?     @relation("TeacherGraded", fields: [gradedById], references: [id])
+  comments Comment[]
 
-  @@index([userId, lessonId])
-  @@index([status, submissionType])
-  @@map("lesson_submission")
+  @@index([lessonId, userId])
+  @@index([status, submittedAt])
+  @@index([gradedById, gradedAt])
 }
 
 model Vocabulary {
@@ -298,27 +299,25 @@ model VocabularyPractice {
 }
 
 model Comment {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @map("user_id") @db.Uuid
-  parentId  String?   @map("parent_id") @db.Uuid
-  entityId  String    @map("entity_id")
-  content   String    @db.Text
-  isEdited  Boolean   @default(false) @map("is_edited")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
+  id           String    @id @default(uuid()) @db.Uuid
+  submissionId String    @map("submission_id") @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  content      String
+  parentId     String?   @map("parent_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
 
-  user      User              @relation(fields: [userId], references: [id], onDelete: NoAction)
-  parent    Comment?          @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   Comment[]         @relation("CommentReplies")
-  reactions CommentReaction[]
+  // Relations
+  submission LessonSubmission  @relation(fields: [submissionId], references: [id])
+  user       User              @relation(fields: [userId], references: [id])
+  parent     Comment?          @relation("CommentReplies", fields: [parentId], references: [id])
+  replies    Comment[]         @relation("CommentReplies")
+  reactions  CommentReaction[]
 
-  @@index([entityId])
-  @@index([parentId])
+  @@index([submissionId])
   @@index([userId])
-  @@index([createdAt])
-  @@index([deletedAt])
-  @@map("comment")
+  @@index([parentId])
 }
 
 model CommentReaction {

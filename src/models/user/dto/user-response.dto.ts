@@ -1,33 +1,37 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
 import { IsOptional, IsString } from 'class-validator';
-
 import {
   PaginationInputDto,
   PaginationOutputDto,
 } from 'src/common/dto/pagination.dto';
 import { User } from 'src/models/user/entities/user.entity';
 
-@InputType()
 export class FindAllUsersDto extends PaginationInputDto {
   //docs
   @ApiPropertyOptional()
-  @Field({ nullable: true })
   @IsOptional()
   @IsString()
   search?: string;
 }
 
-@ObjectType()
-export class UsersResponse {
-  @Field(() => [User])
-  //docs
+export class UserResponse {
   @ApiProperty()
-  data: User[];
+  user: Omit<User, 'passwordHash'>;
+}
 
-  @Field(() => PaginationOutputDto)
-  //docs
+export class UsersResponse {
+  @ApiProperty()
+  data: Omit<User, 'passwordHash'>[];
   @ApiProperty()
   pagination: PaginationOutputDto;
+}
+
+export class DeleteUserResponse {
+  @ApiProperty()
+  message: string;
+}
+
+export class CreateUserResponse {
+  @ApiProperty()
+  user: Omit<User, 'passwordHash'>;
 }

@@ -8,41 +8,152 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-
 import { AuthProvider, UserRole } from '@prisma/client';
 import axios from 'axios';
 import * as bcrypt from 'bcrypt';
 import { Cache } from 'cache-manager';
 import { randomBytes } from 'crypto';
 import { Response } from 'express';
-
 import { IAuthPayload } from 'src/common/interface/auth-payload.interface';
 import { MailService } from 'src/common/mail/mail.service';
 import { PrismaService } from 'src/common/prisma/prisma.service';
-import { LanguageUtil } from 'src/common/utils/language';
 import config, {
   MAX_ACCESS_TOKEN_AGE,
   MAX_REFRESH_TOKEN_AGE,
 } from 'src/config';
+import {
+  LoginDto,
+  RegisterDto,
+  LoginGoogleDto,
+} from 'src/models/user/dto/auth-request.dto';
 import {
   LogoutResponse,
   UserLoginResponse,
   UserRefreshTokenResponse,
   UserRegisterResponse,
   UserResponse,
-} from 'src/models/user/dtos/auth-response.dto';
-import { LoginGoogleDto } from 'src/models/user/dtos/login-google.dto';
-import { LoginDto } from 'src/models/user/dtos/login.dto';
-import { RegisterDto } from 'src/models/user/dtos/register.dto';
+} from 'src/models/user/dto/auth-response.dto';
+import { AuthServiceInterface } from 'src/models/user/interface/auth-service.interface';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements AuthServiceInterface {
   constructor(
     private prisma: PrismaService,
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly mailService: MailService,
   ) {}
+
+  private readonly includeProfiles = {
+    studentProfile: true,
+    teacherProfile: true,
+  };
+
+  async validateUser(email: string, password: string): Promise<UserResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: this.includeProfiles,
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (user.authProvider !== AuthProvider.local) {
+      throw new UnauthorizedException('Invalid authentication method');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid password');
+    }
+
+    return { user };
+  }
+
+  async socialLogin(
+    provider: AuthProvider,
+    profile: any,
+  ): Promise<UserResponse> {
+    try {
+      let user = await this.prisma.user.findUnique({
+        where: { email: profile.email },
+        include: this.includeProfiles,
+      });
+
+      if (!user) {
+        user = await this.prisma.user.create({
+          data: {
+            email: profile.email,
+            username: profile.name || profile.email.split('@')[0],
+            firstName: profile.firstName || profile.given_name,
+            lastName: profile.lastName || profile.family_name,
+            profilePicture: profile.picture,
+            passwordHash: '', // Empty for social login
+            role: UserRole.user,
+            authProvider: provider,
+            isEmailVerified: true,
+          },
+          include: {
+            teacherProfile: true,
+            studentProfile: true,
+          },
+        });
+
+        // Create default student profile for new users
+        await this.prisma.studentProfile.create({
+          data: {
+            userId: user.id,
+            tokensBalance: 0,
+          },
+        });
+      }
+
+      if (user.authProvider !== provider) {
+        throw new BadRequestException(
+          `User is registered with ${user.authProvider} authentication`,
+        );
+      }
+
+      return { user };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Error during social login');
+    }
+  }
+
+  async verifyEmail(token: string): Promise<boolean> {
+    try {
+      const payload = this.jwtService.verify(token, {
+        secret: config.jwt.jwtAccessSecret,
+      });
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        include: this.includeProfiles,
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid verification token');
+      }
+
+      if (user.isEmailVerified) {
+        return true;
+      }
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { isEmailVerified: true },
+      });
+
+      return true;
+    } catch (error) {
+      console.log(error);
+      throw new UnauthorizedException('Invalid or expired verification token');
+    }
+  }
 
   private generateTokens(user: any) {
     const payload = {
@@ -64,6 +175,7 @@ export class AuthService {
   async getCurrentUser(authPayload: IAuthPayload): Promise<UserResponse> {
     const user = await this.prisma.user.findUnique({
       where: { id: String(authPayload.sub) },
+      include: this.includeProfiles,
     });
 
     return {
@@ -73,7 +185,10 @@ export class AuthService {
 
   async login(loginDto: LoginDto, res: Response): Promise<UserLoginResponse> {
     const { email, password } = loginDto;
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: this.includeProfiles,
+    });
 
     if (!user) {
       throw new UnauthorizedException('User not found');
@@ -111,7 +226,6 @@ export class AuthService {
       throw new ConflictException('Username or email already exists');
     }
 
-    // const mappedLanguage = LanguageUtil.mapISOToLanguageCode(nativeLanguage);
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = await this.prisma.user.create({
@@ -121,10 +235,10 @@ export class AuthService {
           passwordHash: hashedPassword,
           firstName: firstName,
           lastName: lastName,
-          // nativeLanguage: mappedLanguage,
           role: UserRole.user,
           authProvider: AuthProvider.local,
         },
+        include: this.includeProfiles,
       });
 
       const { accessToken, refreshToken } = this.generateTokens(newUser);
@@ -244,8 +358,6 @@ export class AuthService {
       where: { email: userData.email },
     });
 
-    const mappedLanguage = LanguageUtil.mapISOToLanguageCode('vi');
-
     if (!user) {
       // Create new user
       user = await this.prisma.user.create({
@@ -254,13 +366,13 @@ export class AuthService {
           username: userData.name,
           firstName: userData.firstName,
           lastName: userData.lastName,
-          // nativeLanguage: mappedLanguage,
           role: UserRole.user,
           authProvider: userData.provider,
           profilePicture: userData.picture,
           passwordHash: '', // Add required passwordHash field
           isEmailVerified: true, // Since this is OAuth login
         },
+        include: this.includeProfiles,
       });
     }
 
@@ -298,7 +410,6 @@ export class AuthService {
         this.generateTokens(user);
 
       this.setRefreshTokenCookie(res, newRefreshToken);
-      console.log(newRefreshToken);
 
       return {
         access_token: accessToken,

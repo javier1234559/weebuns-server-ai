@@ -1,0 +1,108 @@
+# System Patterns
+
+// ... existing code ...
+
+## Feature Development Pattern
+
+### Directory Structure
+```
+models/
+└── feature-name/
+    ├── dto/
+    │   ├── feature-request.dto.ts
+    │   └── feature-response.dto.ts
+    ├── entities/
+    │   └── feature.entity.ts
+    ├── interface/
+    │   ├── feature.interface.ts
+    │   └── feature-service.interface.ts
+    ├── types/
+    │   └── feature.types.ts
+    ├── feature.controller.ts
+    ├── feature.module.ts
+    └── feature.service.ts
+```
+
+### Development Flow
+1. Interface First
+   - Define entity interface in `interface/feature.interface.ts`
+   - Create service interface in `interface/feature-service.interface.ts`
+   - Define all required methods and their signatures
+
+2. DTO Structure
+   - Create request DTOs with validation decorators
+   - Define response DTOs for data transformation
+   - Use `@ApiProperty()` decorators for Swagger documentation
+   - Group related DTOs by feature name (e.g., `lesson-request.dto.ts`)
+
+3. Service Implementation
+   - Implement service interface
+   - Use dependency injection for required services
+   - Handle data transformation and business logic
+   - Implement error handling and validation
+
+4. Controller Setup
+   - Define routes with appropriate HTTP methods
+   - Use role-based access control decorators
+   - Implement Swagger documentation
+   - Handle request validation and response transformation
+
+### Code Standards
+1. Interface Patterns
+   ```typescript
+   export interface IFeature {
+     id: string;
+     // ... other properties
+   }
+
+   export interface IFeatureService {
+     create(data: CreateFeatureDto): Promise<IFeature>;
+     findById(id: string): Promise<IFeature>;
+     // ... other methods
+   }
+   ```
+
+2. DTO Patterns
+   ```typescript
+   export class FeatureRequestDto {
+     @ApiProperty()
+     @IsString()
+     name: string;
+     // ... other properties
+   }
+   ```
+
+3. Controller Patterns
+   ```typescript
+   @Controller('features')
+   @ApiTags('features')
+   export class FeatureController {
+     constructor(private readonly featureService: FeatureService) {}
+
+     @Post()
+     @Roles(UserRole.ADMIN, UserRole.TEACHER)
+     async create(@Body() dto: CreateFeatureDto) {
+       return this.featureService.create(dto);
+     }
+   }
+   ```
+
+### Role-Based Access
+- Define clear role requirements for each endpoint
+- Use `@Roles()` decorator for access control
+- Common roles: ADMIN, TEACHER, STUDENT
+- Document role requirements in Swagger
+
+### Swagger Documentation
+- Use `@ApiTags()` for feature grouping
+- Document all DTOs with `@ApiProperty()`
+- Provide response examples
+- Include role requirements in documentation
+
+### Error Handling
+- Use custom exceptions when needed
+- Transform errors to consistent response format
+- Validate DTOs using class-validator
+- Handle edge cases explicitly
+
+// ... existing code ...

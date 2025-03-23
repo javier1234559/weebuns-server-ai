@@ -1,50 +1,98 @@
-import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  AuthProvider,
+  UserRole,
+  TeacherProfile,
+  StudentProfile,
+  SkillType,
+} from '@prisma/client';
+import { IUser } from '../interface/user.interface';
+import { Decimal } from '@prisma/client/runtime/library';
 
-import { AuthProvider, UserRole } from '@prisma/client';
+export class TeacherProfileEntity implements TeacherProfile {
+  @ApiProperty()
+  id: string;
 
-import { LanguageCode } from 'src/common/enum/common';
+  @ApiProperty()
+  userId: string;
 
-import { IUser } from '../user.interface';
+  @ApiProperty({ enum: SkillType, isArray: true })
+  specialization: SkillType[];
 
-registerEnumType(UserRole, {
-  name: 'UserRole',
-  description: 'User roles in the system',
-});
+  @ApiProperty({ nullable: true })
+  qualification: string | null;
 
-registerEnumType(AuthProvider, {
-  name: 'AuthProvider',
-  description: 'Authentication providers',
-});
+  @ApiProperty({ nullable: true })
+  teachingExperience: number | null;
 
-registerEnumType(LanguageCode, {
-  name: 'LanguageCode',
-  description: 'Available language codes',
-});
+  @ApiProperty({ nullable: true })
+  hourlyRate: Decimal | null;
 
-@ObjectType()
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+
+  @ApiProperty({ nullable: true })
+  deletedAt: Date | null;
+}
+
+export class StudentProfileEntity implements StudentProfile {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  userId: string;
+
+  @ApiProperty({ nullable: true })
+  targetStudyDuration: number | null;
+
+  @ApiProperty({ nullable: true })
+  targetReading: number | null;
+
+  @ApiProperty({ nullable: true })
+  targetListening: number | null;
+
+  @ApiProperty({ nullable: true })
+  targetWriting: number | null;
+
+  @ApiProperty({ nullable: true })
+  targetSpeaking: number | null;
+
+  @ApiProperty({ nullable: true })
+  nextExamDate: Date | null;
+
+  @ApiProperty()
+  tokensBalance: number;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+
+  @ApiProperty({ nullable: true })
+  deletedAt: Date | null;
+}
+
 export class User implements IUser {
-  @Field(() => ID)
   @ApiProperty({
     example: '00321d6f-2bcf-4985-9659-92a571275da6',
   })
   id: string;
 
-  @Field()
   @ApiProperty({ example: 'johndoe' })
   username: string;
 
-  @Field()
   @ApiProperty({ example: 'john@example.com' })
   email: string;
 
-  @Field(() => String)
   @ApiProperty({
     example: '$2b$10$sOToCWV4/2hJjVo7TJSqOuUbRq8ZRxM6EdfXq1/cIfmBF.5z8L5MK',
   })
   passwordHash: string;
 
-  @Field(() => UserRole)
   @ApiProperty({
     enum: UserRole,
     example: UserRole.user,
@@ -52,7 +100,6 @@ export class User implements IUser {
   })
   role: UserRole;
 
-  @Field(() => AuthProvider)
   @ApiProperty({
     enum: AuthProvider,
     example: AuthProvider.local,
@@ -60,146 +107,58 @@ export class User implements IUser {
   })
   authProvider: AuthProvider;
 
-  @Field(() => String, { nullable: true })
   @ApiProperty({
     nullable: true,
   })
   authProviderId: string | null;
 
-  @Field(() => String, { nullable: true })
   @ApiProperty({
     example: 'John',
     nullable: true,
   })
   firstName: string | null;
 
-  @Field(() => String, { nullable: true })
   @ApiProperty({
     example: 'Doe',
     nullable: true,
   })
   lastName: string | null;
 
-  @Field(() => String, { nullable: true })
   @ApiProperty({
     example: 'https://example.com/avatar.jpg',
     nullable: true,
   })
   profilePicture: string | null;
 
-  @Field()
   @ApiProperty({
     example: false,
   })
   isEmailVerified: boolean;
 
-  // @Field(() => LanguageCode)
-  // @ApiProperty({
-  //   enum: LanguageCode,
-  //   example: LanguageCode.VIETNAMESE,
-  //   description: "User's native language",
-  // })
-  // nativeLanguage: string;
-
-  @Field(() => Date, { nullable: true })
   @ApiProperty({
     nullable: true,
   })
   lastLogin: Date | null;
 
-  @Field(() => Date)
   @ApiProperty({
     example: '2024-01-01T00:00:00.000Z',
   })
   createdAt: Date;
 
-  @Field(() => Date)
   @ApiProperty({
     example: '2024-01-01T00:00:00.000Z',
   })
   updatedAt: Date;
 
-  @Field(() => Date, { nullable: true })
   @ApiProperty({
     nullable: true,
     description: 'Timestamp when the user was deleted (soft delete)',
   })
   deletedAt: Date | null;
 
-  // // Relationships
-  // @ApiProperty({
-  //   type: () => [Course],
-  //   nullable: true,
-  // })
-  // courses?: Course[];
+  @ApiProperty({ type: () => TeacherProfileEntity, nullable: true })
+  teacherProfile: TeacherProfile | null;
 
-  // @ApiProperty({
-  //   type: () => [CourseProgress],
-  //   nullable: true,
-  //   description: 'Progress tracking for enrolled courses',
-  // })
-  // courseProgress?: CourseProgress[];
-
-  // @ApiProperty({
-  //   type: () => [Note],
-  //   nullable: true,
-  //   description: 'Notes created by the user',
-  // })
-  // notes?: Note[];
-
-  // @ApiProperty({
-  //   type: () => [Vocabulary],
-  //   nullable: true,
-  //   description: 'Vocabulary items created by the user',
-  // })
-  // vocabularies?: Vocabulary[];
-
-  // @ApiProperty({
-  //   type: () => [Space],
-  //   nullable: true,
-  //   description: 'Learning spaces created by the user',
-  // })
-  // spaces?: Space[];
-
-  // @ApiProperty({
-  //   type: () => [Essay],
-  //   nullable: true,
-  //   description: 'Essays written by the user',
-  // })
-  // essays?: Essay[];
-
-  // @ApiProperty({
-  //   type: () => [Correction],
-  //   nullable: true,
-  //   description: 'Corrections made by the user',
-  // })
-  // corrections?: Correction[];
-
-  // @ApiProperty({
-  //   type: () => [CorrectionReply],
-  //   nullable: true,
-  //   description: 'Replies to corrections',
-  // })
-  // correctionReplies?: CorrectionReply[];
-
-  // @ApiProperty({
-  //   type: () => LessonComment,
-  //   isArray: true,
-  //   required: false,
-  // })
-  // lessonComments?: LessonComment[];
-
-  // @ApiProperty({
-  //   type: () => [Subscription],
-  //   nullable: true,
-  //   description: 'User subscriptions',
-  // })
-  // subscriptions?: Subscription[];
-
-  // @ApiProperty({
-  //   type: () => [CorrectionCredit],
-  //   nullable: true,
-  //   description: 'Correction credits owned by the user',
-  // })
-  // correctionCredits?: CorrectionCredit[];
+  @ApiProperty({ type: () => StudentProfileEntity, nullable: true })
+  studentProfile: StudentProfile | null;
 }

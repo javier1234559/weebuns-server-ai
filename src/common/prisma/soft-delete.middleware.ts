@@ -41,7 +41,6 @@ export const createSoftDeleteMiddleware = (prisma: PrismaClient) => {
           //     NOT: { status: ContentStatus.deleted },
           //   },
           // });
-
           // if (!exist) {
           //   throw new Error('Record not found or already deleted');
           // }

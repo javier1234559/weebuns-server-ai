@@ -20,7 +20,7 @@ import { FileKeyDto } from 'src/common/upload/dto/file-key.dto';
 
 import { UploadService } from './upload.service';
 
-@ApiTags('Upload')
+@ApiTags('upload')
 @Controller('uploads')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}

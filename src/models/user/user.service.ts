@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable, NotFoundException } from '@nestjs/common';
-
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { AuthProvider, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-
 import {
   notDeletedQuery,
   paginationQuery,
@@ -12,42 +14,34 @@ import {
 } from 'src/common/helper/prisma-queries.helper';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { calculatePagination } from 'src/common/utils/pagination';
-import { CreateUserDto } from 'src/models/user/dtos/create-user.dto';
-import { FindAllUsersDto } from 'src/models/user/dtos/find-all-user.dto';
-import { UpdateProfileUserDto } from 'src/models/user/dtos/update-profile-user.dto';
-import { UpdateUserDto } from 'src/models/user/dtos/update-user.dto';
+import { UserResponse } from 'src/models/user/dto/auth-response.dto';
 import {
-  CreateUserResponse,
+  ProfileDto,
+  TeacherDto,
+  UpdateProfileUserDto,
+} from 'src/models/user/dto/user-request.dto';
+import {
   DeleteUserResponse,
-  UpdateUserResponse,
-  UserResponse,
+  FindAllUsersDto,
   UsersResponse,
-} from 'src/models/user/dtos/user-response.dto';
+} from 'src/models/user/dto/user-response.dto';
+import { User } from 'src/models/user/entities/user.entity';
+import { UserServiceInterface } from 'src/models/user/interface/user-service.interface';
 
 @Injectable()
-export class UserService {
+export class UserService implements UserServiceInterface {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createUserInput: CreateUserDto): Promise<CreateUserResponse> {
-    const { password, ...userData } = createUserInput;
-    const hashedPassword = await bcrypt.hash(password, 10);
+  private readonly userIncludeQuery = {
+    include: {
+      teacherProfile: true,
+      studentProfile: true,
+    },
+  };
 
-    const newUser = await this.prisma.user.create({
-      data: {
-        username: userData.username,
-        email: userData.email,
-        firstName: userData.first_name,
-        lastName: userData.last_name,
-        // nativeLanguage: userData.nativeLanguage,
-        profilePicture: userData.profile_picture,
-        passwordHash: hashedPassword,
-        role: userData.role || UserRole.user,
-        authProvider: AuthProvider.local,
-      },
-    });
-
-    const { passwordHash, ...userWithoutPassword } = newUser;
-    return { user: userWithoutPassword };
+  private transformUserResponse(user: any): Omit<User, 'passwordHash'> {
+    const { passwordHash, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   async findAll(findAllUsersDto: FindAllUsersDto): Promise<UsersResponse> {
@@ -62,6 +56,7 @@ export class UserService {
       },
       orderBy: { createdAt: 'desc' },
       ...paginationQuery(page, perPage),
+      ...this.userIncludeQuery,
     };
 
     const [users, totalItems] = await Promise.all([
@@ -70,28 +65,222 @@ export class UserService {
     ]);
 
     return {
-      users: users.map(({ passwordHash, ...user }) => user),
+      data: users.map((user) => this.transformUserResponse(user)),
       pagination: calculatePagination(totalItems, findAllUsersDto),
     };
   }
 
-  async findOne(id: string): Promise<UserResponse> {
+  async findById(id: string): Promise<UserResponse> {
     const user = await this.prisma.user.findUnique({
-      where: { id, ...notDeletedQuery },
+      where: { id },
+      ...this.userIncludeQuery,
+    });
+    return { user: this.transformUserResponse(user) };
+  }
+
+  async createTeacher(teacherDto: TeacherDto): Promise<UserResponse> {
+    const {
+      password,
+      specialization,
+      qualification,
+      teachingExperience,
+      hourlyRate,
+      ...userData
+    } = teacherDto;
+
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: userData.email }, { username: userData.username }],
+        ...notDeletedQuery,
+      },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Email or username already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newTeacher = await this.prisma.user.create({
+      data: {
+        ...userData,
+        passwordHash: hashedPassword,
+        role: UserRole.teacher,
+        authProvider: AuthProvider.local,
+        teacherProfile: {
+          create: {
+            specialization,
+            qualification,
+            teachingExperience,
+            hourlyRate,
+          },
+        },
+      },
+      ...this.userIncludeQuery,
+    });
+
+    return { user: this.transformUserResponse(newTeacher) };
+  }
+
+  async updateTeacher(
+    id: string,
+    teacherDto: TeacherDto,
+  ): Promise<UserResponse> {
+    const existingTeacher = await this.prisma.user.findFirst({
+      where: {
+        id,
+        role: UserRole.teacher,
+        ...notDeletedQuery,
+      },
+      ...this.userIncludeQuery,
+    });
+
+    if (!existingTeacher) {
+      throw new NotFoundException(`Teacher with ID ${id} not found`);
+    }
+
+    const {
+      password,
+      specialization,
+      qualification,
+      teachingExperience,
+      hourlyRate,
+      ...userData
+    } = teacherDto;
+
+    const updatedTeacher = await this.prisma.user.update({
+      where: { id },
+      data: {
+        ...userData,
+        teacherProfile: {
+          update: {
+            specialization,
+            qualification,
+            teachingExperience,
+            hourlyRate,
+          },
+        },
+      },
+      ...this.userIncludeQuery,
+    });
+
+    return { user: this.transformUserResponse(updatedTeacher) };
+  }
+
+  async updateProfileTeacher(
+    userId: string,
+    data: ProfileDto,
+  ): Promise<UserResponse> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        role: UserRole.teacher,
+        ...notDeletedQuery,
+      },
+      ...this.userIncludeQuery,
     });
 
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException('Teacher not found');
     }
 
-    const { passwordHash, ...userWithoutPassword } = user;
-    return { user: userWithoutPassword };
+    const {
+      specialization,
+      qualification,
+      teachingExperience,
+      hourlyRate,
+      ...basicData
+    } = data;
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...basicData,
+        teacherProfile: user.teacherProfile
+          ? {
+              update: {
+                specialization,
+                qualification,
+                teachingExperience,
+                hourlyRate,
+              },
+            }
+          : {
+              create: {
+                specialization,
+                qualification,
+                teachingExperience,
+                hourlyRate,
+              },
+            },
+      },
+      ...this.userIncludeQuery,
+    });
+
+    return { user: this.transformUserResponse(updatedUser) };
   }
 
-  async update(
-    id: string,
-    updateUserInput: UpdateUserDto,
-  ): Promise<UpdateUserResponse> {
+  async updateProfileStudent(
+    userId: string,
+    data: ProfileDto,
+  ): Promise<UserResponse> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        role: UserRole.user,
+        ...notDeletedQuery,
+      },
+      ...this.userIncludeQuery,
+    });
+
+    if (!user) {
+      throw new NotFoundException('Student not found');
+    }
+
+    const {
+      targetStudyDuration,
+      targetReading,
+      targetListening,
+      targetWriting,
+      targetSpeaking,
+      nextExamDate,
+      ...basicData
+    } = data;
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...basicData,
+        studentProfile: user.studentProfile
+          ? {
+              update: {
+                targetStudyDuration,
+                targetReading,
+                targetListening,
+                targetWriting,
+                targetSpeaking,
+                nextExamDate,
+              },
+            }
+          : {
+              create: {
+                targetStudyDuration,
+                targetReading,
+                targetListening,
+                targetWriting,
+                targetSpeaking,
+                nextExamDate,
+                tokensBalance: 0,
+              },
+            },
+      },
+      ...this.userIncludeQuery,
+    });
+
+    return { user: this.transformUserResponse(updatedUser) };
+  }
+
+  async remove(id: string): Promise<DeleteUserResponse> {
     const user = await this.prisma.user.findFirst({
       where: { id, ...notDeletedQuery },
     });
@@ -100,23 +289,20 @@ export class UserService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    const updatedUser = await this.prisma.user.update({
+    await this.prisma.user.update({
       where: { id },
       data: {
-        ...updateUserInput,
-        firstName: updateUserInput.first_name,
-        lastName: updateUserInput.last_name,
+        ...softDeleteQuery,
       },
     });
 
-    const { passwordHash, ...userWithoutPassword } = updatedUser;
-    return { user: userWithoutPassword };
+    return { message: 'User deleted successfully' };
   }
 
   async updateProfile(
     id: string,
     updateUserInput: UpdateProfileUserDto,
-  ): Promise<UpdateUserResponse> {
+  ): Promise<UserResponse> {
     const user = await this.prisma.user.findFirst({
       where: { id, ...notDeletedQuery },
     });
@@ -131,27 +317,13 @@ export class UserService {
         firstName: updateUserInput.firstName,
         lastName: updateUserInput.lastName,
         email: updateUserInput.email,
-        // nativeLanguage: updateUserInput.nativeLanguage,
         username: updateUserInput.username,
         profilePicture: updateUserInput.profilePicture,
       },
+      ...this.userIncludeQuery,
     });
 
     const { passwordHash, ...userWithoutPassword } = updatedUser;
-    return { user: userWithoutPassword };
-  }
-
-  async remove(id: string): Promise<DeleteUserResponse> {
-    const user = await this.prisma.user.findFirst({
-      where: { id, ...notDeletedQuery },
-    });
-
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-
-    const deletedUser = await this.prisma.user.update(softDeleteQuery(id));
-    const { passwordHash, ...userWithoutPassword } = deletedUser;
     return { user: userWithoutPassword };
   }
 }

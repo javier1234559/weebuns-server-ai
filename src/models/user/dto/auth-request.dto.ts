@@ -1,6 +1,39 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IsEmail, IsString, Length, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  Length,
+  MinLength,
+  IsOptional,
+} from 'class-validator';
+
+export class LoginDto {
+  @IsEmail()
+  //docs
+  @ApiProperty()
+  email: string;
+
+  @IsString()
+  @MinLength(6)
+  //docs
+  @ApiProperty()
+  password: string;
+}
+
+export class LoginGoogleDto {
+  @IsString()
+  //docs
+  @ApiProperty()
+  accessToken: string;
+}
+
+export class LoginFacebookDto {
+  @IsString()
+  //docs
+  @ApiProperty()
+  accessToken: string;
+}
 
 export class RequestResetPasswordDto {
   @IsEmail()
@@ -51,4 +84,31 @@ export class ResetPasswordDto {
     description: 'New password (minimum 6 characters)',
   })
   newPassword: string;
+}
+
+export class RegisterDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  username: string;
+
+  @IsString()
+  @MinLength(6)
+  password: string;
+
+  @IsString()
+  @IsOptional()
+  firstName?: string;
+
+  @IsString()
+  @IsOptional()
+  lastName?: string;
+}
+
+export class RegisterGoogleDto {
+  @IsString()
+  //docs
+  @ApiProperty()
+  uuid: string;
 }

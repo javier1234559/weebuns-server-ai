@@ -8,33 +8,29 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
-
 import { AuthGuard } from 'src/common/auth/auth.guard';
 import { AuthService } from 'src/models/user/auth.service';
 import {
+  RegisterDto,
+  LoginDto,
+  LoginGoogleDto,
+  LoginFacebookDto,
+  RequestResetPasswordDto,
+  VerifyResetCodeDto,
+  ResetPasswordDto,
+} from 'src/models/user/dto/auth-request.dto';
+import {
   LogoutResponse,
+  RequestResetPasswordResponse,
+  ResetPasswordResponse,
   UserLoginResponse,
   UserRefreshTokenResponse,
   UserRegisterResponse,
   UserResponse,
-} from 'src/models/user/dtos/auth-response.dto';
-import { LoginFacebookDto } from 'src/models/user/dtos/login-facebook.dto';
-import { LoginGoogleDto } from 'src/models/user/dtos/login-google.dto';
-import { LoginDto } from 'src/models/user/dtos/login.dto';
-import {
-  RequestResetPasswordResponse,
-  ResetPasswordResponse,
   VerifyResetCodeResponse,
-} from 'src/models/user/dtos/password-reset-response.dto';
-import {
-  RequestResetPasswordDto,
-  ResetPasswordDto,
-  VerifyResetCodeDto,
-} from 'src/models/user/dtos/password-reset.dto';
-import { RegisterDto } from 'src/models/user/dtos/register.dto';
+} from 'src/models/user/dto/auth-response.dto';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -43,7 +39,6 @@ export class AuthController {
 
   @UseGuards(AuthGuard)
   @Get('me')
-  @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'User profile retrieved successfully',
@@ -58,7 +53,6 @@ export class AuthController {
   }
 
   @Post('register')
-  @ApiOperation({ summary: 'Register new user' })
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'User registered successfully',
@@ -80,7 +74,6 @@ export class AuthController {
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Login successful',
@@ -98,7 +91,6 @@ export class AuthController {
   }
 
   @Post('login/google')
-  @ApiOperation({ summary: 'Login with Google' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Google login successful',
@@ -116,7 +108,6 @@ export class AuthController {
   }
 
   @Post('login/facebook')
-  @ApiOperation({ summary: 'Login with Facebook' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Facebook login successful',
@@ -134,7 +125,6 @@ export class AuthController {
   }
 
   @Post('refresh-token')
-  @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Token refreshed successfully',
@@ -153,7 +143,6 @@ export class AuthController {
   }
 
   @Post('logout')
-  @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Logout successful',
@@ -166,7 +155,6 @@ export class AuthController {
   }
 
   @Post('password-reset/request')
-  @ApiOperation({ summary: 'Request password reset code' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Reset code sent successfully',
@@ -183,7 +171,6 @@ export class AuthController {
   }
 
   @Post('password-reset/verify')
-  @ApiOperation({ summary: 'Verify reset code' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Code verified successfully',
@@ -200,7 +187,6 @@ export class AuthController {
   }
 
   @Post('password-reset/reset')
-  @ApiOperation({ summary: 'Reset password with code' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Password reset successfully',

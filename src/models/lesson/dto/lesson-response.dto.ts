@@ -1,12 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ContentStatus, LessonType, Prisma, SkillType } from '@prisma/client';
+import { ContentStatus, LessonType, Prisma } from '@prisma/client';
+import {
+  SkillType as SkillTypeInterface,
+  LevelType as LevelTypeInterface,
+} from '../interface/lesson.interface';
 
 export class ResponseLessonDto {
   @ApiProperty({ type: String, description: 'Lesson ID' })
   id: string;
 
-  @ApiProperty({ enum: SkillType, enumName: 'SkillType' })
-  skill: SkillType;
+  @ApiProperty({ enum: SkillTypeInterface, enumName: 'SkillType' })
+  skill: SkillTypeInterface;
 
   @ApiProperty({ type: String, description: 'Title of the lesson' })
   title: string;
@@ -70,4 +74,7 @@ export class ResponseLessonDto {
     description: 'Last update timestamp',
   })
   updatedAt: Date;
+
+  @ApiProperty({ enum: LevelTypeInterface })
+  levelType: LevelTypeInterface;
 }

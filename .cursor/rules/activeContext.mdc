@@ -1,0 +1,37 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Active Context
+
+## Current Focus
+1. Code Organization
+   - Standardizing module structure
+   - Implementing common patterns
+   - Setting up base interfaces
+   - Establishing DTO patterns
+
+2. Core Features
+   - Lesson management
+   - User system
+   - Token economy
+   - AI integration
+
+## Recent Changes
+- Established module structure pattern
+- Implemented base interfaces
+- Set up DTO validation
+- Added common query patterns
+
+## Active Decisions
+1. Code Structure
+   - Interface-first approach
+   - DTO validation
+   - Query reusability
+   - Response transformation
+
+2. Data Management
+   - JSON content storage
+   - Soft delete pattern
+   - Reference data system
