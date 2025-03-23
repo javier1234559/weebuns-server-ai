@@ -1,4 +1,4 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
   IsEnum,
@@ -6,22 +6,23 @@ import {
   IsArray,
   IsInt,
   Min,
+  IsNumber,
+  IsObject,
 } from 'class-validator';
-import { SkillType, LevelType } from '../interface/lesson.interface';
-import { ContentStatus, LessonType, Prisma } from '@prisma/client';
-import { Type } from 'class-transformer';
-import { Transform } from 'stream';
+import { SkillType } from '../interface/lesson.interface';
+import { ContentStatus, LessonType } from '@prisma/client';
+import { Type, Transform } from 'class-transformer';
 
 export class FindAllLessonsDto {
   @ApiProperty({ enum: SkillType, required: false })
   @IsEnum(SkillType)
   @IsOptional()
-  skillType?: SkillType;
+  skill?: SkillType;
 
-  @ApiProperty({ enum: LevelType, required: false })
-  @IsEnum(LevelType)
+  @ApiProperty({ required: false })
+  @IsString()
   @IsOptional()
-  levelType?: LevelType;
+  level?: string;
 
   @ApiProperty({ required: false })
   @IsString()
@@ -34,135 +35,49 @@ export class CreateLessonDto {
   @IsString()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  description: string;
+  @IsOptional()
+  description?: string;
+
+  @ApiProperty({ enum: LessonType })
+  @IsEnum(LessonType)
+  lessonType: LessonType;
 
   @ApiProperty()
+  @IsString()
+  level: string;
+
+  @ApiProperty()
+  @IsString()
+  topic: string;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @IsOptional()
+  timeLimit?: number;
+
+  @ApiProperty()
+  @IsObject()
   content: any;
 
-  @ApiProperty({ enum: LevelType })
-  @IsEnum(LevelType)
-  levelType: LevelType;
-}
-
-export class UpdateLessonDto extends PartialType(CreateLessonDto) {
-  @ApiProperty({
-    enum: SkillType,
-    enumName: 'SkillType',
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(SkillType)
-  skill?: SkillType;
-
-  @ApiProperty({
-    type: 'string',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  title?: string;
-
-  @ApiProperty({
-    type: 'string',
-    required: false,
-    nullable: true,
-  })
-  description?: string | null;
-
-  @ApiProperty({
-    enum: LessonType,
-    enumName: 'LessonType',
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(LessonType)
-  lessonType?: LessonType;
-
-  @ApiProperty({
-    type: 'string',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  topic?: string;
-
-  @ApiProperty({
-    type: 'integer',
-    format: 'int32',
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  timeLimit?: number | null;
-
-  @ApiProperty({
-    type: () => Object,
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  content?: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput;
-
-  @ApiProperty({
-    type: 'string',
-    format: 'date-time',
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  deletedAt?: Date | null;
-
-  @ApiProperty({
-    type: 'string',
-    required: false,
-    nullable: true,
-    description: 'URL hình ảnh thumbnail của lesson',
-  })
-  @IsOptional()
-  @IsString()
-  thumbnailUrl?: string | null;
-
-  @ApiProperty({ type: 'string', required: false })
-  @IsOptional()
-  @IsString()
-  level?: string;
-
-  @ApiProperty({ type: 'string', required: false })
-  @IsOptional()
-  @IsEnum(LevelType)
-  levelType?: LevelType;
-
-  @ApiProperty({
-    type: 'string',
-    isArray: true,
-    required: false,
-  })
-  @IsOptional()
+  @ApiProperty({ type: [String], required: false })
   @IsArray()
-  @IsString({ each: true })
+  @IsOptional()
   tags?: string[];
 
-  @ApiProperty({
-    enum: ContentStatus,
-    enumName: 'ContentStatus',
-    description: 'Status of the lesson',
-    required: false,
-  })
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  thumbnailUrl?: string;
+
+  @ApiProperty({ enum: ContentStatus, required: false })
   @IsEnum(ContentStatus)
   @IsOptional()
   status?: ContentStatus;
-
-  @ApiProperty({
-    type: String,
-    description: 'ID of the editor',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  lastEditedById?: string;
 }
+
+export class UpdateLessonDto extends CreateLessonDto {}
 
 export class QueryLessonDto {
   @ApiProperty({

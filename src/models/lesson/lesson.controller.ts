@@ -7,75 +7,128 @@ import {
   Body,
   Param,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { LessonService } from './lesson.service';
 import {
   CreateLessonDto,
   UpdateLessonDto,
   FindAllLessonsDto,
 } from './dto/lesson-request.dto';
-import { LessonResponseDto } from './dto/lesson-response.dto';
-import { SkillType } from './interface/lesson.interface';
-import { CurrentUser } from 'src/common/decorators/user.decorator';
+import { SkillType } from '@prisma/client';
+import { Roles } from 'src/common/decorators/role.decorator';
+import { UserRole } from 'src/common/decorators/role.decorator';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { User } from 'src/models/user/entities/user.entity';
+import { RolesGuard } from 'src/common/auth/role.guard';
+import { AuthGuard } from 'src/common/auth/auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('lessons')
 @Controller('lessons')
+@ApiBearerAuth()
+@UseGuards(AuthGuard, RolesGuard)
 export class LessonController {
   constructor(private readonly lessonService: LessonService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all lessons with search and filter' })
-  async findAll(
-    @Query() query: FindAllLessonsDto,
-  ): Promise<LessonResponseDto[]> {
+  async findAll(@Query() query: FindAllLessonsDto) {
     return this.lessonService.findAll(query);
   }
 
   @Post('reading')
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  @ApiOperation({ summary: 'Create new reading lesson' })
-  async createReading(
-    @Body() dto: CreateLessonDto,
-    @CurrentUser('id') userId: string,
-  ): Promise<LessonResponseDto> {
-    return this.lessonService.create(SkillType.READING, dto, userId);
+  async createReading(@Body() dto: CreateLessonDto, @CurrentUser() user: User) {
+    return this.lessonService.createLesson(SkillType.reading, dto, user.id);
   }
 
   @Get('reading/:id')
-  @ApiOperation({ summary: 'Get reading lesson detail' })
-  async getReading(@Param('id') id: string): Promise<LessonResponseDto> {
-    return this.lessonService.findById(id, SkillType.READING);
+  async getReading(@Param('id') id: string) {
+    return this.lessonService.findById(id);
   }
 
   @Patch('reading/:id')
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  @ApiOperation({ summary: 'Update reading lesson' })
   async updateReading(
     @Param('id') id: string,
     @Body() dto: UpdateLessonDto,
-    @CurrentUser('id') userId: string,
-  ): Promise<LessonResponseDto> {
-    return this.lessonService.update(id, SkillType.READING, dto, userId);
+    @CurrentUser() user: User,
+  ) {
+    return this.lessonService.updateLesson(id, dto, user.id);
   }
 
-  @Delete('reading/:id')
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  @ApiOperation({ summary: 'Delete reading lesson' })
-  async deleteReading(@Param('id') id: string): Promise<void> {
-    return this.lessonService.delete(id, SkillType.READING);
-  }
-
-  // Similar endpoints for listening
   @Post('listening')
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  @ApiOperation({ summary: 'Create new listening lesson' })
   async createListening(
     @Body() dto: CreateLessonDto,
-    @CurrentUser('id') userId: string,
-  ): Promise<LessonResponseDto> {
-    return this.lessonService.create(SkillType.LISTENING, dto, userId);
+    @CurrentUser() user: User,
+  ) {
+    return this.lessonService.createLesson(SkillType.listening, dto, user.id);
   }
 
-  // ... Add other listening endpoints similarly
+  @Get('listening/:id')
+  async getListening(@Param('id') id: string) {
+    return this.lessonService.findById(id);
+  }
+
+  @Patch('listening/:id')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  async updateListening(
+    @Param('id') id: string,
+    @Body() dto: UpdateLessonDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.lessonService.updateLesson(id, dto, user.id);
+  }
+
+  @Post('speaking')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  async createSpeaking(
+    @Body() dto: CreateLessonDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.lessonService.createLesson(SkillType.speaking, dto, user.id);
+  }
+
+  @Get('speaking/:id')
+  async getSpeaking(@Param('id') id: string) {
+    return this.lessonService.findById(id);
+  }
+
+  @Patch('speaking/:id')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  async updateSpeaking(
+    @Param('id') id: string,
+    @Body() dto: UpdateLessonDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.lessonService.updateLesson(id, dto, user.id);
+  }
+
+  @Post('writing')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  async createWriting(@Body() dto: CreateLessonDto, @CurrentUser() user: User) {
+    return this.lessonService.createLesson(SkillType.writing, dto, user.id);
+  }
+
+  @Get('writing/:id')
+  async getWriting(@Param('id') id: string) {
+    return this.lessonService.findById(id);
+  }
+
+  @Patch('writing/:id')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  async updateWriting(
+    @Param('id') id: string,
+    @Body() dto: UpdateLessonDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.lessonService.updateLesson(id, dto, user.id);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  async delete(@Param('id') id: string) {
+    return this.lessonService.deleteLesson(id);
+  }
 }

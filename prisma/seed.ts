@@ -37,14 +37,13 @@ async function cleanDatabase() {
 async function seedReferenceData() {
   console.log('Seeding reference data...');
   for (const data of referenceData) {
+    console.log(`Creating reference data: ${data.type} - ${data.code}`);
     const ref = await prisma.referenceData.create({
       data: data,
     });
     generatedIds.referenceData.push(ref.id);
   }
-  console.log(
-    `Created ${generatedIds.referenceData.length} reference data entries`,
-  );
+  console.log('Reference data created:', generatedIds.referenceData);
 }
 
 async function seedUsers() {
@@ -88,8 +87,11 @@ async function seedStudentProfiles() {
 
 async function seedLessons() {
   console.log('Seeding lessons...');
-  const lessons = createLessons(generatedIds.users, generatedIds.referenceData);
+  const lessons = createLessons(generatedIds.users);
   for (const lesson of lessons) {
+    console.log(
+      `Creating lesson with level: ${lesson.level}, topic: ${lesson.topic}`,
+    );
     const createdLesson = await prisma.lesson.create({
       data: lesson,
     });

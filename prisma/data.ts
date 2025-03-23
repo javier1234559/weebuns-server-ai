@@ -2,15 +2,8 @@ import {
   UserRole,
   ContentStatus,
   AuthProvider,
-  PaymentType,
-  PaymentStatus,
   SkillType,
   LessonType,
-  SubmissionStatus,
-  NotificationType,
-  ReactionType,
-  TokenTransactionType,
-  FeatureCode,
   Prisma,
 } from '@prisma/client';
 
@@ -129,7 +122,6 @@ export const users: Prisma.UserCreateInput[] = [
     username: 'teacher1',
     email: 'teacher@gmail.com',
     passwordHash:
-
       '$2b$10$TbcKtwojUtPrF5exijC8a.7dBBAhT8wRc6SfBZMo54zYiaM9/WG6G', //securePass123
     role: UserRole.teacher,
     authProvider: AuthProvider.local,
@@ -185,15 +177,14 @@ export const createStudentProfiles = (userIds: string[]) => [
   },
 ];
 
-export const createLessons = (userIds: string[], referenceDataId: string[]) => [
+export const createLessons = (userIds: string[]) => [
   {
     skill: SkillType.writing,
     title: 'IELTS Writing Task 2: Opinion Essay',
     description: 'Practice writing an opinion essay for IELTS Writing Task 2',
     lessonType: LessonType.practice,
-    // level: REFERENCE.LEVELS.INTERMEDIATE,
-    // levelType: REFERENCE.LEVELS.INTERMEDIATE,
-    topic: 'EDUCATION',
+    level: 'INTERMEDIATE',
+    topic: 'A1',
     timeLimit: 40,
     content: {
       prompt:
@@ -205,16 +196,7 @@ export const createLessons = (userIds: string[], referenceDataId: string[]) => [
       ],
     },
     status: ContentStatus.published,
-    createdBy: {
-      connect: {
-        id: userIds[1],
-      },
-    },
-    levelRef: {
-      connect: {
-        id: referenceDataId[0],
-      },
-    },
+    createdById: userIds[1],
   },
 ];
 

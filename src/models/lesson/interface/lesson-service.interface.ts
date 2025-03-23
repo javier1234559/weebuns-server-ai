@@ -1,23 +1,23 @@
-import { CreateLessonDto } from 'src/models/lesson/dto/create-lesson.dto';
-import { SkillType } from './lesson.interface';
+import { ILesson } from './lesson.interface';
 import {
-  FindAllLessonsDto,
+  CreateLessonDto,
   UpdateLessonDto,
-} from 'src/models/lesson/dto/lesson-request.dto';
+  FindAllLessonsDto,
+} from '../dto/lesson-request.dto';
+import { SkillType } from '@prisma/client';
 
 export interface ILessonService {
-  findAll(params: FindAllLessonsDto): Promise<LessonResponseDto[]>;
-  findById(id: string, skillType: SkillType): Promise<LessonResponseDto>;
-  create(
+  findAll(params: FindAllLessonsDto): Promise<ILesson[]>;
+  findById(id: string): Promise<ILesson>;
+  createLesson(
     skillType: SkillType,
-    data: CreateLessonDto,
+    dto: CreateLessonDto,
     userId: string,
-  ): Promise<LessonResponseDto>;
-  update(
+  ): Promise<ILesson>;
+  updateLesson(
     id: string,
-    skillType: SkillType,
-    data: UpdateLessonDto,
+    dto: UpdateLessonDto,
     userId: string,
-  ): Promise<LessonResponseDto>;
-  delete(id: string, skillType: SkillType): Promise<void>;
+  ): Promise<ILesson>;
+  deleteLesson(id: string): Promise<void>;
 }

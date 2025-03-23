@@ -4,250 +4,207 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/common/prisma/prisma.service';
-import { CreateLessonDto } from './dto/create-lesson.dto';
-import { ResponseLessonDto } from './dto/lesson-response.dto';
-import { UserRole } from 'src/common/decorators/role.decorator';
-import { LessonServiceInterface } from './interface/lesson-service.interface';
-import { QueryLessonDto } from './dto/query-lesson.dto';
-import { PaginatedLessonsResponseDto } from './dto/paginated-lessons-response.dto';
-import { ContentStatus, LessonType, Prisma, SkillType } from '@prisma/client';
-import { UpdateLessonDto } from './dto/update-lesson.dto';
+import {
+  CreateLessonDto,
+  UpdateLessonDto,
+  FindAllLessonsDto,
+} from './dto/lesson-request.dto';
+import { ContentStatus, SkillType } from '@prisma/client';
+import { ILessonService } from './interface/lesson-service.interface';
+import { ILesson } from './interface/lesson.interface';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
-export class LessonService implements LessonServiceInterface {
+export class LessonService implements ILessonService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createLesson(
-    userId: string,
-    userRole: UserRole,
-    dto: CreateLessonDto,
-  ): Promise<ResponseLessonDto> {
-    if (userRole !== UserRole.ADMIN && userRole !== UserRole.TEACHER) {
-      throw new ForbiddenException(
-        'You do not have permission to create a lesson',
-      );
+  async findAll(params: FindAllLessonsDto): Promise<ILesson[]> {
+    const { skill, level, search } = params;
+
+    const where: Prisma.LessonWhereInput = {
+      deletedAt: null,
+    };
+
+    // Add filters only if they are provided
+    if (skill) {
+      where.skill = skill.toLowerCase() as SkillType;
     }
 
-    const lesson = await this.prisma.lesson.create({
-      data: {
-        ...dto,
-        createdById: userId,
-      },
-    });
+    if (level) {
+      where.level = level;
+    }
 
-    return lesson;
-  }
-
-  async getLessons(
-    userId: string,
-    userRole: UserRole,
-    queryDto: QueryLessonDto,
-  ): Promise<PaginatedLessonsResponseDto> {
-    try {
-      console.log(
-        'Getting lessons with query params:',
-        JSON.stringify(queryDto),
-      );
-
-      const { page = 1, limit = 10, ...filters } = queryDto;
-      const skip = (page - 1) * limit;
-
-      // Build filter conditions
-      const where: Prisma.LessonWhereInput = {};
-
-      if (filters.skill) {
-        console.log(`Filtering by skill: ${filters.skill}`);
-        // Handle skill as a string
-        where.skill = filters.skill as SkillType;
-      }
-
-      if (filters.lessonType) {
-        console.log(`Filtering by lessonType: ${filters.lessonType}`);
-        // Handle lessonType as a string
-        where.lessonType = filters.lessonType as LessonType;
-      }
-
-      if (filters.topic) {
-        where.topic = filters.topic;
-      }
-
-      if (filters.title) {
-        where.title = {
-          contains: filters.title,
-          mode: 'insensitive',
-        };
-      }
-
-      if (filters.level) {
-        where.level = filters.level;
-      }
-
-      if (filters.createdById) {
-        where.createdById = filters.createdById;
-      }
-
-      // Handle tag filtering
-      if (filters.tags && Array.isArray(filters.tags)) {
-        where.tags = {
-          hasSome: filters.tags,
-        };
-      }
-
-      // Apply status filtering with role-based restrictions
-      if (filters.status) {
-        console.log(`Filtering by status: ${filters.status}`);
-        // Handle status as a string
-        where.status = filters.status as ContentStatus;
-      } else {
-        // If no specific status is requested, apply role-based visibility rules
-        if (userRole === UserRole.ADMIN) {
-          // Admins can see all lessons except deleted ones
-          where.status = {
-            not: ContentStatus.deleted,
-          };
-        } else if (userRole === UserRole.TEACHER) {
-          // Teachers can see all published and their own drafts
-          where.OR = [
-            { status: ContentStatus.published },
-            { status: ContentStatus.draft, createdById: userId },
-            { status: ContentStatus.private, createdById: userId },
-          ];
-        } else {
-          // Regular users can only see published lessons
-          where.status = ContentStatus.published;
-        }
-      }
-
-      console.log('Final query where clause:', JSON.stringify(where));
-
-      // Execute count and query in parallel
-      const [total, lessons] = await Promise.all([
-        this.prisma.lesson.count({ where }),
-        this.prisma.lesson.findMany({
-          where,
-          skip,
-          take: limit,
-          orderBy: {
-            createdAt: 'desc',
-          },
-        }),
-      ]);
-
-      const totalPages = Math.ceil(total / limit);
-
-      return {
-        data: lessons,
-        total,
-        page,
-        limit,
-        totalPages,
+    if (search) {
+      where.title = {
+        contains: search,
+        mode: 'insensitive',
       };
-    } catch (error) {
-      console.error('Error in getLessons service method:', error);
-      throw error;
     }
+
+    return this.prisma.lesson.findMany({
+      where,
+      select: {
+        id: true,
+        skill: true,
+        title: true,
+        description: true,
+        lessonType: true,
+        level: true,
+        topic: true,
+        timeLimit: true,
+        thumbnailUrl: true,
+        tags: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        content: false,
+        createdById: true,
+        deletedAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    }) as Promise<ILesson[]>;
   }
 
-  async getLessonById(
-    lessonId: string,
-    userId: string,
-    userRole: UserRole,
-  ): Promise<ResponseLessonDto> {
+  async findById(id: string): Promise<ILesson> {
     const lesson = await this.prisma.lesson.findUnique({
-      where: { id: lessonId },
+      where: {
+        id,
+        deletedAt: null,
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            username: true,
+            profilePicture: true,
+          },
+        },
+        levelRef: true,
+        topicRef: true,
+      },
     });
 
     if (!lesson) {
-      throw new NotFoundException(`Lesson with ID ${lessonId} not found`);
-    }
-
-    // Apply visibility restrictions based on user role
-    const canAccess =
-      userRole === UserRole.ADMIN ||
-      (userRole === UserRole.TEACHER &&
-        (lesson.status === ContentStatus.published ||
-          lesson.createdById === userId)) ||
-      (userRole === UserRole.USER && lesson.status === ContentStatus.published);
-
-    if (!canAccess) {
-      throw new ForbiddenException(
-        'You do not have permission to access this lesson',
-      );
+      throw new NotFoundException(`Lesson with ID ${id} not found`);
     }
 
     return lesson;
   }
 
-  async updateLesson(
-    lessonId: string,
+  async createLesson(
+    skillType: SkillType,
+    dto: CreateLessonDto,
     userId: string,
-    userRole: UserRole,
-    dto: UpdateLessonDto,
-  ): Promise<ResponseLessonDto> {
-    // First, check if lesson exists
-    const existingLesson = await this.prisma.lesson.findUnique({
-      where: { id: lessonId },
-    });
+  ): Promise<ILesson> {
+    // Validate reference data
+    const [levelExists, topicExists] = await Promise.all([
+      this.prisma.referenceData.findUnique({ where: { code: dto.level } }),
+      this.prisma.referenceData.findUnique({ where: { code: dto.topic } }),
+    ]);
 
-    if (!existingLesson) {
-      throw new NotFoundException(`Lesson with ID ${lessonId} not found`);
+    if (!levelExists || !topicExists) {
+      throw new ForbiddenException('Invalid level or topic reference');
     }
 
-    // Check permission
-    const canEdit =
-      userRole === UserRole.ADMIN ||
-      (userRole === UserRole.TEACHER && existingLesson.createdById === userId);
-
-    if (!canEdit) {
-      throw new ForbiddenException(
-        'You do not have permission to edit this lesson',
-      );
-    }
-
-    // Update the lesson
-    const updatedLesson = await this.prisma.lesson.update({
-      where: { id: lessonId },
+    return this.prisma.lesson.create({
       data: {
         ...dto,
+        skill: skillType,
+        createdById: userId,
+        status: dto.status || ContentStatus.draft,
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            username: true,
+            profilePicture: true,
+          },
+        },
+        levelRef: true,
+        topicRef: true,
       },
     });
-
-    return updatedLesson;
   }
 
-  async deleteLesson(
-    lessonId: string,
+  async updateLesson(
+    id: string,
+    dto: UpdateLessonDto,
     userId: string,
-    userRole: UserRole,
-  ): Promise<ResponseLessonDto> {
-    // First, check if lesson exists
-    const existingLesson = await this.prisma.lesson.findUnique({
-      where: { id: lessonId },
-    });
+  ): Promise<ILesson> {
+    const lesson = await this.findById(id);
 
-    if (!existingLesson) {
-      throw new NotFoundException(`Lesson with ID ${lessonId} not found`);
+    if (lesson.createdById !== userId) {
+      throw new ForbiddenException('You can only update your own lessons');
     }
 
-    // Check permission
-    const canDelete =
-      userRole === UserRole.ADMIN ||
-      (userRole === UserRole.TEACHER && existingLesson.createdById === userId);
+    if (dto.level || dto.topic) {
+      const [levelExists, topicExists] = await Promise.all([
+        dto.level
+          ? this.prisma.referenceData.findUnique({ where: { code: dto.level } })
+          : true,
+        dto.topic
+          ? this.prisma.referenceData.findUnique({ where: { code: dto.topic } })
+          : true,
+      ]);
 
-    if (!canDelete) {
-      throw new ForbiddenException(
-        'You do not have permission to delete this lesson',
-      );
+      if (!levelExists || !topicExists) {
+        throw new ForbiddenException('Invalid level or topic reference');
+      }
     }
 
-    // Soft delete by changing status to deleted
-    const deletedLesson = await this.prisma.lesson.update({
-      where: { id: lessonId },
+    return this.prisma.lesson.update({
+      where: { id },
       data: {
-        status: ContentStatus.deleted,
+        ...dto,
+        updatedAt: new Date(),
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            username: true,
+            profilePicture: true,
+          },
+        },
+        levelRef: true,
+        topicRef: true,
       },
     });
+  }
 
-    return deletedLesson;
+  async deleteLesson(id: string): Promise<void> {
+    const lesson = await this.findById(id);
+
+    if (!lesson) {
+      throw new NotFoundException('Lesson not found');
+    }
+
+    if (lesson.status === ContentStatus.deleted) {
+      throw new ForbiddenException('Lesson is already deleted');
+    }
+
+    // Check if lesson has any submissions
+    const hasSubmissions = await this.prisma.lessonSubmission.count({
+      where: { lessonId: id },
+    });
+
+    if (hasSubmissions) {
+      // Soft delete if has submissions
+      await this.prisma.lesson.update({
+        where: { id },
+        data: {
+          deletedAt: new Date(),
+          status: ContentStatus.deleted,
+        },
+      });
+    } else {
+      // Hard delete if no submissions
+      await this.prisma.lesson.delete({
+        where: { id },
+      });
+    }
   }
 }

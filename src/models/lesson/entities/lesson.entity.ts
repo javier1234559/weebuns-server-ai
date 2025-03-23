@@ -7,19 +7,18 @@ import { LessonSubmission } from 'src/models/lesson-submission/entities/lesson-s
 import { ReferenceData } from 'src/models/reference-data/entities/reference-data.entity';
 
 export class Lesson implements ILesson {
-  @ApiProperty({
-    type: 'string',
-  })
+  @ApiProperty()
   id: string;
+
   @ApiProperty({
     enum: SkillType,
     enumName: 'SkillType',
   })
   skill: SkillType;
-  @ApiProperty({
-    type: 'string',
-  })
+
+  @ApiProperty()
   title: string;
+
   @ApiProperty({
     type: 'string',
     nullable: true,
@@ -30,17 +29,9 @@ export class Lesson implements ILesson {
     enumName: 'LessonType',
   })
   lessonType: LessonType;
-  @ApiProperty({
-    type: 'string',
-  })
+  @ApiProperty()
   level: string;
-  @ApiProperty({
-    type: 'string',
-  })
-  levelType: string;
-  @ApiProperty({
-    type: 'string',
-  })
+  @ApiProperty()
   topic: string;
   @ApiProperty({
     type: 'integer',
