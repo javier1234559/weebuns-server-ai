@@ -116,4 +116,8 @@ export class FindAllLessonQuery extends PaginationInputDto {
   @IsOptional()
   @IsEnum(ContentStatus)
   status?: ContentStatus;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  tag?: string[];
 }

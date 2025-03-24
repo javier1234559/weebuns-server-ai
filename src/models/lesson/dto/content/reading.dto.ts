@@ -9,6 +9,9 @@ class AnswerDTO {
 
 export class QuestionDTO {
   @ApiProperty()
+  id: string;
+
+  @ApiProperty()
   question: string;
 
   @ApiProperty()

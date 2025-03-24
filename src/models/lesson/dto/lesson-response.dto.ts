@@ -16,7 +16,7 @@ export class BaseLessonResponse {
 
 // Common Responses
 export class LessonsResponse {
-  @ApiProperty()
+  @ApiProperty({ type: [Lesson] })
   data: Lesson[];
 
   @ApiProperty()

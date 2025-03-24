@@ -1,18 +1,74 @@
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  $Enums,
+  StudentProfile,
+  TeacherProfile,
+  UserRole,
+} from '@prisma/client';
 import { User } from 'src/models/user/entities/user.entity';
+
+export class UserDto implements Omit<User, 'passwordHash'> {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  email: string;
+
+  @ApiProperty()
+  username: string;
+
+  @ApiProperty({ nullable: true })
+  firstName: string | null;
+
+  @ApiProperty({ nullable: true })
+  lastName: string | null;
+
+  @ApiProperty({ enum: UserRole })
+  role: UserRole;
+
+  @ApiProperty({ enum: $Enums.AuthProvider })
+  authProvider: $Enums.AuthProvider;
+
+  @ApiProperty({ nullable: true })
+  authProviderId: string | null;
+
+  @ApiProperty()
+  isEmailVerified: boolean;
+
+  @ApiProperty({ nullable: true })
+  lastLogin: Date | null;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+
+  @ApiProperty({ nullable: true })
+  deletedAt: Date | null;
+
+  @ApiProperty({ nullable: true })
+  profilePicture: string | null;
+
+  @ApiProperty({ nullable: true })
+  teacherProfile: TeacherProfile | null;
+
+  @ApiProperty({ nullable: true })
+  studentProfile: StudentProfile | null;
+}
 
 export class UserLoginResponse {
   @ApiProperty()
   access_token: string;
-  @ApiProperty()
-  user: Omit<User, 'passwordHash'> | null;
+  @ApiProperty({ type: UserDto })
+  user: UserDto | null;
 }
 
 export class UserRegisterResponse {
   @ApiProperty()
   access_token: string;
-  @ApiProperty()
-  user: Omit<User, 'passwordHash'> | null;
+  @ApiProperty({ type: UserDto })
+  user: UserDto | null;
 }
 
 export class UserRefreshTokenResponse {
@@ -56,8 +112,8 @@ export class ResetPasswordResponse {
 
 export class UserResponse {
   @ApiProperty({
-    type: User,
+    type: UserDto,
     description: 'User object',
   })
-  user: Omit<User, 'passwordHash'> | null;
+  user: UserDto | null;
 }
