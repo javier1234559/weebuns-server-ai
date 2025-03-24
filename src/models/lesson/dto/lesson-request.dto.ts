@@ -1,43 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsEnum,
-  IsOptional,
-  IsArray,
-  IsInt,
-  Min,
-  IsNumber,
-  IsObject,
-} from 'class-validator';
-import { SkillType } from '../interface/lesson.interface';
-import { ContentStatus, LessonType } from '@prisma/client';
-import { Type, Transform } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { ContentStatus, LessonType, SkillType } from '@prisma/client';
+import { ContentReadingDTO } from './content/reading.dto';
+import { ContentListeningDTO } from './content/listening.dto';
+import { ContentWritingDTO } from './content/writing.dto';
+import { ContentSpeakingDTO } from './content/speaking.dto';
+import { PaginationInputDto } from 'src/common/dto/pagination.dto';
 
-export class FindAllLessonsDto {
-  @ApiProperty({ enum: SkillType, required: false })
-  @IsEnum(SkillType)
-  @IsOptional()
-  skill?: SkillType;
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  level?: string;
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  search?: string;
-}
-
-export class CreateLessonDto {
+export class BaseLessonDTO {
   @ApiProperty()
   @IsString()
   title: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty()
   @IsString()
-  @IsOptional()
   description?: string;
 
   @ApiProperty({ enum: LessonType })
@@ -52,131 +28,92 @@ export class CreateLessonDto {
   @IsString()
   topic: string;
 
-  @ApiProperty({ required: false })
-  @IsNumber()
-  @IsOptional()
+  @ApiProperty()
   timeLimit?: number;
 
   @ApiProperty()
-  @IsObject()
-  content: any;
+  @IsString({ each: true })
+  tags: string[];
 
-  @ApiProperty({ type: [String], required: false })
-  @IsArray()
-  @IsOptional()
-  tags?: string[];
-
-  @ApiProperty({ required: false })
+  @ApiProperty()
   @IsString()
-  @IsOptional()
   thumbnailUrl?: string;
 
-  @ApiProperty({ enum: ContentStatus, required: false })
+  @ApiProperty({ enum: ContentStatus })
   @IsEnum(ContentStatus)
-  @IsOptional()
-  status?: ContentStatus;
+  status: ContentStatus;
+
+  @ApiPropertyOptional()
+  createdById?: string;
 }
 
-export class UpdateLessonDto extends CreateLessonDto {}
+export class CreateReadingDTO extends BaseLessonDTO {
+  @ApiProperty()
+  content: ContentReadingDTO;
+}
 
-export class QueryLessonDto {
-  @ApiProperty({
-    required: false,
-    type: Number,
-    default: 1,
-    description: 'Page number (starts from 1)',
-  })
+export class UpdateReadingDTO extends BaseLessonDTO {
+  @ApiPropertyOptional()
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number = 1;
+  content?: ContentReadingDTO;
+}
 
-  @ApiProperty({
-    required: false,
-    type: Number,
-    default: 10,
-    description: 'Number of items per page',
-  })
+export class CreateListeningDTO extends BaseLessonDTO {
+  @ApiProperty()
+  content: ContentListeningDTO;
+}
+
+export class UpdateListeningDTO extends BaseLessonDTO {
+  @ApiPropertyOptional()
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  limit?: number = 10;
+  content?: ContentListeningDTO;
+}
 
-  @ApiProperty({
-    required: false,
-    enum: SkillType,
-    enumName: 'SkillType',
-    description: 'Filter by skill type',
-  })
+export class CreateWritingDTO extends BaseLessonDTO {
+  @ApiProperty()
+  content: ContentWritingDTO;
+}
+
+export class UpdateWritingDTO extends BaseLessonDTO {
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  skill?: string;
+  content?: ContentWritingDTO;
+}
 
-  @ApiProperty({
-    required: false,
-    enum: LessonType,
-    enumName: 'LessonType',
-    description: 'Filter by lesson type',
-  })
+export class CreateSpeakingDTO extends BaseLessonDTO {
+  @ApiProperty()
+  content: ContentSpeakingDTO;
+}
+
+export class UpdateSpeakingDTO extends BaseLessonDTO {
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  lessonType?: string;
+  content?: ContentSpeakingDTO;
+}
 
-  @ApiProperty({
-    required: false,
-    type: String,
-    description: 'Filter by topic',
-  })
+export class FindAllLessonQuery extends PaginationInputDto {
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  topic?: string;
+  search?: string;
 
-  @ApiProperty({
-    required: false,
-    type: String,
-    description: 'Filter by title (partial match)',
-  })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  title?: string;
+  @IsEnum(SkillType)
+  skill?: SkillType;
 
-  @ApiProperty({
-    required: false,
-    enum: ContentStatus,
-    enumName: 'ContentStatus',
-    description: 'Filter by status',
-  })
-  @IsOptional()
-  @IsString()
-  status?: string;
-
-  @ApiProperty({
-    required: false,
-    type: String,
-    description: 'Filter by creator ID',
-  })
-  @IsOptional()
-  @IsString()
-  createdById?: string;
-
-  @ApiProperty({
-    required: false,
-    type: String,
-    description: 'Filter by level',
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   level?: string;
 
-  @ApiProperty({
-    required: false,
-    type: String,
-    description: 'Filter by tag (comma-separated)',
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @Transform(({ value }) => value?.split(',').map((tag) => tag.trim()))
-  tags?: string;
+  topic?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEnum(ContentStatus)
+  status?: ContentStatus;
 }

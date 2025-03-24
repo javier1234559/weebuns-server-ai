@@ -1,16 +1,16 @@
 import { Lesson as PrismaLesson } from '@prisma/client';
 
 export enum SkillType {
-  READING = 'READING',
-  LISTENING = 'LISTENING',
-  SPEAKING = 'SPEAKING',
-  WRITING = 'WRITING',
+  READING = 'reading',
+  LISTENING = 'listening',
+  SPEAKING = 'speaking',
+  WRITING = 'writing',
 }
 
 export enum LevelType {
-  BEGINNER = 'BEGINNER',
-  INTERMEDIATE = 'INTERMEDIATE',
-  ADVANCED = 'ADVANCED',
+  BEGINNER = 'beginner',
+  INTERMEDIATE = 'intermediate',
+  ADVANCED = 'advanced',
 }
 
 export interface ILesson extends PrismaLesson {}

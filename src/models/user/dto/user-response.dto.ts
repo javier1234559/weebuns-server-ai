@@ -6,7 +6,7 @@ import {
 } from 'src/common/dto/pagination.dto';
 import { User } from 'src/models/user/entities/user.entity';
 
-export class FindAllUsersDto extends PaginationInputDto {
+export class FindAllUserQuery extends PaginationInputDto {
   //docs
   @ApiPropertyOptional()
   @IsOptional()

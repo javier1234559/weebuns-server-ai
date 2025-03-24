@@ -18,7 +18,7 @@ import { UserResponse } from './dto/auth-response.dto';
 import { TeacherDto, ProfileDto } from './dto/user-request.dto';
 import {
   DeleteUserResponse,
-  FindAllUsersDto,
+  FindAllUserQuery,
   UsersResponse,
 } from './dto/user-response.dto';
 import { UserService } from './user.service';
@@ -32,12 +32,12 @@ export class UserController {
 
   @Get()
   @Roles(UserRole.ADMIN)
-  @ApiQuery({ type: FindAllUsersDto })
+  @ApiQuery({ type: FindAllUserQuery })
   @ApiResponse({
     status: HttpStatus.OK,
     type: UsersResponse,
   })
-  findAll(@Query() dto: FindAllUsersDto): Promise<UsersResponse> {
+  findAll(@Query() dto: FindAllUserQuery): Promise<UsersResponse> {
     return this.userService.findAll(dto);
   }
 

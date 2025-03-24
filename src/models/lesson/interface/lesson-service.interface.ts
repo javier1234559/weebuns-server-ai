@@ -1,23 +1,48 @@
-import { ILesson } from './lesson.interface';
 import {
-  CreateLessonDto,
-  UpdateLessonDto,
-  FindAllLessonsDto,
-} from '../dto/lesson-request.dto';
-import { SkillType } from '@prisma/client';
+  FindAllLessonQuery,
+  CreateReadingDTO,
+  UpdateReadingDTO,
+  CreateListeningDTO,
+  CreateSpeakingDTO,
+  CreateWritingDTO,
+  UpdateListeningDTO,
+  UpdateSpeakingDTO,
+  UpdateWritingDTO,
+} from 'src/models/lesson/dto/lesson-request.dto';
+import {
+  LessonsResponse,
+  DeleteLessonResponse,
+  ReadingResponse,
+  ListeningResponse,
+  SpeakingResponse,
+  WritingResponse,
+} from 'src/models/lesson/dto/lesson-response.dto';
 
 export interface ILessonService {
-  findAll(params: FindAllLessonsDto): Promise<ILesson[]>;
-  findById(id: string): Promise<ILesson>;
-  createLesson(
-    skillType: SkillType,
-    dto: CreateLessonDto,
-    userId: string,
-  ): Promise<ILesson>;
-  updateLesson(
+  // Common methods
+  findAll(query: FindAllLessonQuery): Promise<LessonsResponse>;
+  delete(id: string): Promise<DeleteLessonResponse>;
+
+  // Reading methods
+  findOneReading(id: string): Promise<ReadingResponse>;
+  createReading(dto: CreateReadingDTO): Promise<ReadingResponse>;
+  updateReading(id: string, dto: UpdateReadingDTO): Promise<ReadingResponse>;
+
+  // Listening methods
+  findOneListening(id: string): Promise<ListeningResponse>;
+  createListening(dto: CreateListeningDTO): Promise<ListeningResponse>;
+  updateListening(
     id: string,
-    dto: UpdateLessonDto,
-    userId: string,
-  ): Promise<ILesson>;
-  deleteLesson(id: string): Promise<void>;
+    dto: UpdateListeningDTO,
+  ): Promise<ListeningResponse>;
+
+  // Speaking methods
+  findOneSpeaking(id: string): Promise<SpeakingResponse>;
+  createSpeaking(dto: CreateSpeakingDTO): Promise<SpeakingResponse>;
+  updateSpeaking(id: string, dto: UpdateSpeakingDTO): Promise<SpeakingResponse>;
+
+  // Writing methods
+  findOneWriting(id: string): Promise<WritingResponse>;
+  createWriting(dto: CreateWritingDTO): Promise<WritingResponse>;
+  updateWriting(id: string, dto: UpdateWritingDTO): Promise<WritingResponse>;
 }

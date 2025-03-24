@@ -22,7 +22,7 @@ import {
 } from 'src/models/user/dto/user-request.dto';
 import {
   DeleteUserResponse,
-  FindAllUsersDto,
+  FindAllUserQuery,
   UsersResponse,
 } from 'src/models/user/dto/user-response.dto';
 import { User } from 'src/models/user/entities/user.entity';
@@ -44,7 +44,7 @@ export class UserService implements UserServiceInterface {
     return userWithoutPassword;
   }
 
-  async findAll(findAllUsersDto: FindAllUsersDto): Promise<UsersResponse> {
+  async findAll(findAllUsersDto: FindAllUserQuery): Promise<UsersResponse> {
     const { page, perPage, search } = findAllUsersDto;
 
     const queryOptions = {

@@ -29,67 +29,81 @@ export class Lesson implements ILesson {
     enumName: 'LessonType',
   })
   lessonType: LessonType;
+
   @ApiProperty()
   level: string;
+
   @ApiProperty()
   topic: string;
+
   @ApiProperty({
     type: 'integer',
     format: 'int32',
     nullable: true,
   })
   timeLimit: number | null;
+
   @ApiProperty({
     type: () => Object,
     nullable: true,
   })
   content: Prisma.JsonValue | null;
+
   @ApiProperty({
     type: 'string',
     isArray: true,
   })
   tags: string[];
+
   @ApiProperty({
     type: 'string',
     nullable: true,
   })
   thumbnailUrl: string | null;
+
   @ApiProperty({
     enum: ContentStatus,
     enumName: 'ContentStatus',
   })
   status: ContentStatus;
+
   @ApiProperty({
     type: 'string',
   })
   createdById: string;
+
   @ApiProperty({
     type: 'string',
     format: 'date-time',
   })
   createdAt: Date;
+
   @ApiProperty({
     type: 'string',
     format: 'date-time',
   })
   updatedAt: Date;
+
   @ApiProperty({
     type: 'string',
     format: 'date-time',
     nullable: true,
   })
   deletedAt: Date | null;
+
   @ApiProperty({
     type: () => User,
     required: false,
   })
   createdBy?: User;
+
   @ApiProperty({
     type: () => LessonSubmission,
     isArray: true,
     required: false,
   })
   submissions?: LessonSubmission[];
+
   @ApiProperty({
     type: () => ReferenceData,
     required: false,
