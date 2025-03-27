@@ -256,7 +256,7 @@ History is his last class of the day. Lucas has a hard time staying awake. Many 
       'https://img.freepik.com/free-photo/english-books-resting-table-working-space_23-2149429616.jpg?semt=ais_hybrid',
     timeLimit: 40,
     content: {
-      audio:
+      audio_url:
         'https://ubp4bdepbl.ufs.sh/f/fkClDhMQd7TEhczv4c20jGCrUK3yIO18HXvFLsN7Wm5MwPha',
       questions: [
         {

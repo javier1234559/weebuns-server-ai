@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsArray, ValidateNested } from 'class-validator';
 
 class AnswerDTO {
   @ApiProperty()
@@ -13,6 +15,9 @@ export class QuestionDTO {
   right_answer: string;
 
   @ApiProperty({ type: [AnswerDTO] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AnswerDTO)
   answer_list: AnswerDTO[];
 
   @ApiProperty()
@@ -26,6 +31,9 @@ export class ContentListeningDTO {
   @ApiProperty()
   audio_url: string;
 
-  @ApiProperty()
-  question_list: QuestionDTO[];
+  @ApiProperty({ type: [QuestionDTO] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => QuestionDTO)
+  questions: QuestionDTO[];
 }
