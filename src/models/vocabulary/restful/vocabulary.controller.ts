@@ -26,6 +26,7 @@ import { UpdateVocabularyDto } from 'src/models/vocabulary/dto/update-vocabulary
 import { VocabularyFilterDto } from 'src/models/vocabulary/dto/vocabulary-filter.dto';
 import { VocabularyResponseDto } from 'src/models/vocabulary/dto/vocabulary-response.dto';
 import { VocabularyDto } from 'src/models/vocabulary/dto/vocabulary.dto';
+import { DeleteVocabularyResponseDto } from 'src/models/vocabulary/dto/delete-vocabulary-response.dto';
 import { VocabularyService } from 'src/models/vocabulary/vocabulary.service';
 
 @ApiTags('vocabularies')
@@ -102,7 +103,7 @@ export class VocabularyController {
   @Delete(':id')
   @Roles(UserRole.USER, UserRole.TEACHER, UserRole.ADMIN)
   @ApiOperation({ summary: 'Delete a vocabulary' })
-  @ApiResponse({ status: 200, type: VocabularyDto })
+  @ApiResponse({ status: 200, type: DeleteVocabularyResponseDto })
   remove(@Param('id') id: string, @Req() req) {
     return this.vocabularyService.remove(id, req.user);
   }
