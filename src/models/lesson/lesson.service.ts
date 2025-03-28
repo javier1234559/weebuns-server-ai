@@ -59,7 +59,17 @@ export class LessonService implements ILessonService {
   }
 
   async findAll(query: FindAllLessonQuery): Promise<LessonsResponse> {
-    const { page, perPage, skill, level, search, status, topic, tag } = query;
+    const {
+      page,
+      perPage,
+      skill,
+      level,
+      search,
+      status,
+      topic,
+      tag,
+      lessonType,
+    } = query;
 
     const queryOptions = {
       where: {
@@ -68,6 +78,7 @@ export class LessonService implements ILessonService {
         ...(topic && { topic }),
         ...(level && { level }),
         ...(skill && { skill }),
+        ...(lessonType && { lessonType }),
         ...(tag && { tags: { has: tag } }),
         ...(search ? searchQuery(search, ['title']) : {}),
       },
