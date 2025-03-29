@@ -5,55 +5,114 @@ import {
   TeacherProfile,
   UserRole,
 } from '@prisma/client';
-import { User } from 'src/models/user/entities/user.entity';
+import {
+  StudentProfileEntity,
+  TeacherProfileEntity,
+  User,
+} from 'src/models/user/entities/user.entity';
 
 export class UserDto implements Omit<User, 'passwordHash'> {
-  @ApiProperty()
+  @ApiProperty({
+    example: '00321d6f-2bcf-4985-9659-92a571275da6',
+    type: 'string',
+  })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    example: 'john@example.com',
+    type: 'string',
+  })
   email: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    example: 'johndoe',
+    type: 'string',
+  })
   username: string;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({
+    example: 'John',
+    type: 'string',
+    nullable: true,
+  })
   firstName: string | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({
+    example: 'Doe',
+    type: 'string',
+    nullable: true,
+  })
   lastName: string | null;
 
-  @ApiProperty({ enum: UserRole })
+  @ApiProperty({
+    enum: UserRole,
+    enumName: 'UserRole',
+    example: UserRole.user,
+  })
   role: UserRole;
 
-  @ApiProperty({ enum: $Enums.AuthProvider })
+  @ApiProperty({
+    enum: $Enums.AuthProvider,
+    enumName: 'AuthProvider',
+    example: $Enums.AuthProvider.local,
+  })
   authProvider: $Enums.AuthProvider;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({
+    type: 'string',
+    nullable: true,
+  })
   authProviderId: string | null;
 
-  @ApiProperty()
+  @ApiProperty({
+    type: 'boolean',
+    example: false,
+  })
   isEmailVerified: boolean;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
+  })
   lastLogin: Date | null;
 
-  @ApiProperty()
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+  })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+  })
   updatedAt: Date;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
+  })
   deletedAt: Date | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({
+    type: 'string',
+    example: 'https://example.com/avatar.jpg',
+    nullable: true,
+  })
   profilePicture: string | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({
+    type: () => TeacherProfileEntity,
+    nullable: true,
+  })
   teacherProfile: TeacherProfile | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({
+    type: () => StudentProfileEntity,
+    nullable: true,
+  })
   studentProfile: StudentProfile | null;
 }
 
