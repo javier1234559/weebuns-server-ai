@@ -1,0 +1,74 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# System Patterns
+
+## Code Organization
+1. Module Structure
+   ```
+   models/
+   ├── entity-name/
+   │   ├── dto/
+   │   │   ├── create-entity.dto.ts
+   │   │   ├── update-entity.dto.ts
+   │   │   ├── find-all-entity.dto.ts
+   │   │   └── entity-response.dto.ts
+   │   ├── interface/
+   │   │   ├── entity.interface.ts
+   │   │   └── entity-service.interface.ts
+   │   ├── entity.module.ts
+   │   ├── entity.service.ts
+   │   └── entity.controller.ts
+   ```
+
+2. Development Flow
+   - Define DTOs first
+   - Create interfaces
+   - Implement service
+   - Add controller
+   - Configure module
+
+3. Service Implementation Pattern
+   ```typescript
+   @Injectable()
+   export class EntityService implements IEntityService {
+     private readonly entityIncludeQuery = {
+       select: {
+         // Common fields
+         id: true,
+         createdAt: true,
+         updatedAt: true,
+         // Relations
+         relation: {
+           select: {
+             // Specific fields
+           }
+         }
+       }
+     };
+
+     constructor(private readonly prisma: PrismaService) {}
+
+     async findById(id: string): Promise<IEntity> {
+       const entity = await this.prisma.entity.findUnique({
+         where: { id },
+         ...this.entityIncludeQuery
+       });
+       return this.transformResponse(entity);
+     }
+
+     private transformResponse(entity: any): IEntity {
+       // Remove sensitive data
+       return entity;
+     }
+   }
+   ```
+
+4. Common Patterns
+   - Soft delete with deletedAt
+   - UUID primary keys
+   - Timestamp tracking
+   - JSON content storage
+   - Query reusability

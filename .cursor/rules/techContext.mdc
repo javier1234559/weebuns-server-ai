@@ -1,0 +1,44 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Technical Context
+
+## Core Technologies
+- NestJS with TypeScript
+- Prisma ORM + PostgreSQL
+- Swagger API documentation
+- JWT Authentication
+
+## Development Setup
+1. Database
+   - PostgreSQL with Prisma
+   - UUID primary keys
+   - Soft delete pattern
+   - JSON fields for flexible content
+
+2. API Design
+   - RESTful endpoints
+   - Swagger documentation
+   - DTO validation
+   - Consistent response format
+
+3. Code Standards
+   - TypeScript strict mode
+   - Interface-first design
+   - Dependency injection
+   - Modular architecture
+
+## Technical Constraints
+1. Data Storage
+   - JSON for flexible content
+   - Reference data system
+   - Soft delete support
+   - Timestamp tracking
+
+2. API Security
+   - JWT authentication
+   - Role-based access
+   - Token validation
+   - Rate limiting

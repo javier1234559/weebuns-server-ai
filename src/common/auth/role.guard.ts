@@ -47,6 +47,10 @@ export class RolesGuard implements CanActivate {
   }
 
   private matchRoles(requiredRoles: UserRole[], userRole: UserRole): boolean {
+    // If no specific roles are required, allow all authenticated users
+    if (!requiredRoles || requiredRoles.length === 0) {
+      return true;
+    }
     return requiredRoles.includes(userRole);
   }
 }

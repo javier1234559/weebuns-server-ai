@@ -1,4 +1,4 @@
-import { ContentStatus, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 const softDeleteExtension = Prisma.defineExtension({
   name: 'softDelete',
@@ -11,14 +11,12 @@ const softDeleteExtension = Prisma.defineExtension({
     //     };
     //     return query(args);
     //   },
-
     //   async findFirst({ args, query }) {
     //     args.where = {
     //       AND: [args.where || {}, { NOT: { status: ContentStatus.deleted } }],
     //     };
     //     return query(args);
     //   },
-
     //   async findUnique({ args, query }) {
     //     // For findUnique, convert to findFirst but keep the unique condition
     //     const { where, ...rest } = args;
@@ -31,21 +29,18 @@ const softDeleteExtension = Prisma.defineExtension({
     //       },
     //     });
     //   },
-
     //   async delete({ args, query }) {
     //     return query({
     //       ...args,
     //       data: { status: ContentStatus.deleted },
     //     });
     //   },
-
     //   async deleteMany({ args, query }) {
     //     return query({
     //       ...args,
     //       data: { status: ContentStatus.deleted },
     //     });
     //   },
-
     //   async update({ args, query }) {
     //     // For update, keep the unique identifier and add NOT deleted condition
     //     const { where, data, ...rest } = args;
@@ -58,7 +53,6 @@ const softDeleteExtension = Prisma.defineExtension({
     //       },
     //     });
     //   },
-
     //   async updateMany({ args, query }) {
     //     const { where, ...rest } = args;
     //     return query({
@@ -68,7 +62,6 @@ const softDeleteExtension = Prisma.defineExtension({
     //       },
     //     });
     //   },
-
     //   async count({ args, query }) {
     //     args.where = {
     //       AND: [args.where || {}, { NOT: { status: ContentStatus.deleted } }],

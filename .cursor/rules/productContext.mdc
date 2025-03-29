@@ -1,0 +1,45 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Product Context
+
+## Problem Statement
+Language learners need an integrated platform that combines:
+- Systematic lesson management across 4 skills
+- Flexible content creation for teachers
+- AI-assisted learning features
+- Community interaction through comments and feedback
+
+## User Experience Goals
+### For Students
+- Access to structured lessons by skill
+- Practice and test modes for each skill
+- AI assistance for speaking and writing
+- Community feedback on submissions
+
+### For Teachers
+- Create and manage lessons
+- Grade student submissions
+- Provide detailed feedback
+- Track student progress
+
+## Core Features
+1. Lesson Management
+   - Skill-specific content structure
+   - Practice/Test modes
+   - Progress tracking
+   - AI integration
+
+2. User System
+   - Student/Teacher profiles
+   - Role-based access
+   - Token management
+   - Progress tracking
+
+3. Community Features
+   - Submission feedback
+   - Comment system
+   - Teacher grading
+   - Public forum
