@@ -5,6 +5,7 @@ import { ContentListeningDTO } from 'src/models/lesson/dto/content/listening.dto
 import { ContentSpeakingDTO } from 'src/models/lesson/dto/content/speaking.dto';
 import { ContentWritingDTO } from 'src/models/lesson/dto/content/writing.dto';
 import { PaginationOutputDto } from 'src/common/dto/pagination.dto';
+import { Prisma } from '@prisma/client';
 
 export class ResponseLessonDto extends Lesson {}
 
@@ -29,33 +30,61 @@ export class DeleteLessonResponse {
 }
 
 // Reading Response
+export class ReadingLesson extends Lesson {
+  @ApiProperty({
+    type: () => ContentReadingDTO,
+  })
+  content: ContentReadingDTO & Prisma.JsonValue;
+}
+
 export class ReadingResponse extends BaseLessonResponse {
-  @ApiProperty()
-  data: Lesson & {
-    content: ContentReadingDTO;
-  };
+  @ApiProperty({
+    type: () => ReadingLesson,
+  })
+  data: ReadingLesson;
 }
 
 // Listening Response
+export class ListeningLesson extends Lesson {
+  @ApiProperty({
+    type: () => ContentListeningDTO,
+  })
+  content: ContentListeningDTO & Prisma.JsonValue;
+}
+
 export class ListeningResponse extends BaseLessonResponse {
-  @ApiProperty()
-  data: Lesson & {
-    content: ContentListeningDTO;
-  };
+  @ApiProperty({
+    type: () => ListeningLesson,
+  })
+  data: ListeningLesson;
 }
 
 // Writing Response
+export class WritingLesson extends Lesson {
+  @ApiProperty({
+    type: () => ContentWritingDTO,
+  })
+  content: ContentWritingDTO & Prisma.JsonValue;
+}
+
 export class WritingResponse extends BaseLessonResponse {
-  @ApiProperty()
-  data: Lesson & {
-    content: ContentWritingDTO;
-  };
+  @ApiProperty({
+    type: () => WritingLesson,
+  })
+  data: WritingLesson;
 }
 
 // Speaking Response
+export class SpeakingLesson extends Lesson {
+  @ApiProperty({
+    type: () => ContentSpeakingDTO,
+  })
+  content: ContentSpeakingDTO & Prisma.JsonValue;
+}
+
 export class SpeakingResponse extends BaseLessonResponse {
-  @ApiProperty()
-  data: Lesson & {
-    content: ContentSpeakingDTO;
-  };
+  @ApiProperty({
+    type: () => SpeakingLesson,
+  })
+  data: SpeakingLesson;
 }
