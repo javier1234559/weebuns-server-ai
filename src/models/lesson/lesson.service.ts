@@ -226,6 +226,8 @@ export class LessonService implements ILessonService {
       ...this.lessonIncludeQuery,
     });
 
+    console.log(lesson);
+
     return {
       data: {
         ...lesson,
