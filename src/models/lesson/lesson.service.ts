@@ -59,7 +59,17 @@ export class LessonService implements ILessonService {
   }
 
   async findAll(query: FindAllLessonQuery): Promise<LessonsResponse> {
-    const { page, perPage, skill, level, search, status, topic, tag } = query;
+    const {
+      page,
+      perPage,
+      skill,
+      level,
+      search,
+      status,
+      topic,
+      tag,
+      lessonType,
+    } = query;
 
     const queryOptions = {
       where: {
@@ -68,6 +78,7 @@ export class LessonService implements ILessonService {
         ...(topic && { topic }),
         ...(level && { level }),
         ...(skill && { skill }),
+        ...(lessonType && { lessonType }),
         ...(tag && { tags: { has: tag } }),
         ...(search ? searchQuery(search, ['title']) : {}),
       },
@@ -89,18 +100,29 @@ export class LessonService implements ILessonService {
   async delete(id: string): Promise<DeleteLessonResponse> {
     const lesson = await this.prisma.lesson.findFirst({
       where: { id, ...notDeletedQuery },
+      include: {
+        submissions: true, // Check for related submissions
+      },
     });
 
     if (!lesson) {
       throw new NotFoundException(`Lesson with ID ${id} not found`);
     }
 
-    await this.prisma.lesson.update({
-      where: { id },
-      data: {
-        ...softDeleteQuery,
-      },
-    });
+    if (lesson.submissions.length > 0) {
+      // If there are related submissions, delete from database
+      await this.prisma.lesson.delete({
+        where: { id },
+      });
+    } else {
+      // If no relations, perform soft delete
+      await this.prisma.lesson.update({
+        where: { id },
+        data: {
+          ...softDeleteQuery,
+        },
+      });
+    }
 
     return { message: 'Lesson deleted successfully' };
   }
@@ -214,6 +236,8 @@ export class LessonService implements ILessonService {
       },
       ...this.lessonIncludeQuery,
     });
+
+    console.log(lesson);
 
     return {
       data: {

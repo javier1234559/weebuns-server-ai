@@ -1,7 +1,7 @@
 import { InputType, Field } from '@nestjs/graphql';
 import { ApiProperty, PartialType, OmitType } from '@nestjs/swagger';
 import { SkillType, UserRole, AuthProvider } from '@prisma/client';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import {
   IsOptional,
   IsString,
@@ -49,7 +49,13 @@ export class ProfileDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsDecimal()
+  @IsNumber()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return parseFloat(value);
+    }
+    return value;
+  })
   hourlyRate?: number;
 
   // Student Profile
@@ -208,7 +214,13 @@ export class CreateTeacherDto {
   teachingExperience: number;
 
   @ApiProperty()
-  @IsDecimal()
+  @IsNumber()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return parseFloat(value);
+    }
+    return value;
+  })
   hourlyRate: number;
 }
 
@@ -328,9 +340,10 @@ export class TeacherDto {
   @IsString()
   email: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  password: string;
+  password?: string;
 
   @ApiProperty()
   @IsString()
@@ -358,6 +371,12 @@ export class TeacherDto {
   teachingExperience: number;
 
   @ApiProperty()
-  @IsDecimal()
+  @IsNumber()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return parseFloat(value);
+    }
+    return value;
+  })
   hourlyRate: number;
 }

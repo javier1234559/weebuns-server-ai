@@ -51,7 +51,7 @@ export class LessonController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiResponse({ status: 200, type: DeleteLessonResponse })
   remove(@Param('id') id: string): Promise<DeleteLessonResponse> {
     return this.lessonService.delete(id);

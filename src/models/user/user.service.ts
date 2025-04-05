@@ -145,22 +145,58 @@ export class UserService implements UserServiceInterface {
       qualification,
       teachingExperience,
       hourlyRate,
+      username,
+      email,
       ...userData
     } = teacherDto;
 
-    const updatedTeacher = await this.prisma.user.update({
-      where: { id },
-      data: {
-        ...userData,
-        teacherProfile: {
-          update: {
-            specialization,
-            qualification,
-            teachingExperience,
-            hourlyRate,
-          },
+    if (username && username !== existingTeacher.username) {
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          username,
+          ...notDeletedQuery,
+        },
+      });
+
+      if (existingUser) {
+        throw new ConflictException('Username already exists');
+      }
+    }
+
+    if (email && email !== existingTeacher.email) {
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          email,
+          ...notDeletedQuery,
+        },
+      });
+
+      if (existingUser) {
+        throw new ConflictException('Email already exists');
+      }
+    }
+
+    const updateData: any = {
+      ...userData,
+      username,
+      email,
+      teacherProfile: {
+        update: {
+          specialization,
+          qualification,
+          teachingExperience,
+          hourlyRate,
         },
       },
+    };
+
+    if (password) {
+      updateData.passwordHash = await bcrypt.hash(password, 10);
+    }
+
+    const updatedTeacher = await this.prisma.user.update({
+      where: { id },
+      data: updateData,
       ...this.userIncludeQuery,
     });
 

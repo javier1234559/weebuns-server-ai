@@ -1,4 +1,4 @@
-import { ContentStatus, Prisma } from '@prisma/client';
+import { ContentStatus } from '@prisma/client';
 
 type PaginatedQuery = {
   skip?: number;
@@ -15,10 +15,9 @@ export const isPublishedQuery = {
   status: ContentStatus.published,
 };
 
-export const softDeleteQuery = (id: string): Prisma.UserUpdateArgs => ({
-  where: { id },
-  data: { deletedAt: new Date() },
-});
+export const softDeleteQuery = {
+  deletedAt: new Date(),
+};
 
 export const paginationQuery = (
   page?: number,

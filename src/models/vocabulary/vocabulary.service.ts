@@ -148,9 +148,11 @@ export class VocabularyService {
       );
     }
 
-    return this.prisma.vocabulary.delete({
+    await this.prisma.vocabulary.delete({
       where: { id },
     });
+
+    return { message: 'Vocabulary deleted successfully' };
   }
 
   async getDueVocabularies(user: IAuthPayload) {
