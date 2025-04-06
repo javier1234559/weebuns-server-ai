@@ -36,6 +36,7 @@ import {
 } from './dto/lesson-response.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { IAuthPayload } from 'src/common/interface/auth-payload.interface';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('lessons')
 @Controller('lessons')
@@ -45,6 +46,7 @@ export class LessonController {
   constructor(private readonly lessonService: LessonService) {}
 
   @Get()
+  @Public()
   @ApiResponse({ status: 200, type: LessonsResponse })
   findAll(@Query() query: FindAllLessonQuery): Promise<LessonsResponse> {
     return this.lessonService.findAll(query);
@@ -58,6 +60,7 @@ export class LessonController {
   }
 
   @Get('reading/:id')
+  @Public()
   @ApiResponse({ status: 200, type: ReadingResponse })
   findOneReading(@Param('id') id: string): Promise<ReadingResponse> {
     return this.lessonService.findOneReading(id);
@@ -87,6 +90,7 @@ export class LessonController {
   }
 
   @Get('listening/:id')
+  @Public()
   @ApiResponse({ status: 200, type: ListeningResponse })
   findOneListening(@Param('id') id: string): Promise<ListeningResponse> {
     return this.lessonService.findOneListening(id);
@@ -116,6 +120,7 @@ export class LessonController {
   }
 
   @Get('writing/:id')
+  @Public()
   @ApiResponse({ status: 200, type: WritingResponse })
   findOneWriting(@Param('id') id: string): Promise<WritingResponse> {
     return this.lessonService.findOneWriting(id);
@@ -145,6 +150,7 @@ export class LessonController {
   }
 
   @Get('speaking/:id')
+  @Public()
   @ApiResponse({ status: 200, type: SpeakingResponse })
   findOneSpeaking(@Param('id') id: string): Promise<SpeakingResponse> {
     return this.lessonService.findOneSpeaking(id);
