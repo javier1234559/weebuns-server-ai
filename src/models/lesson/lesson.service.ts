@@ -100,18 +100,29 @@ export class LessonService implements ILessonService {
   async delete(id: string): Promise<DeleteLessonResponse> {
     const lesson = await this.prisma.lesson.findFirst({
       where: { id, ...notDeletedQuery },
+      include: {
+        submissions: true, // Check for related submissions
+      },
     });
 
     if (!lesson) {
       throw new NotFoundException(`Lesson with ID ${id} not found`);
     }
 
-    await this.prisma.lesson.update({
-      where: { id },
-      data: {
-        ...softDeleteQuery,
-      },
-    });
+    if (lesson.submissions.length > 0) {
+      // If there are related submissions, delete from database
+      await this.prisma.lesson.delete({
+        where: { id },
+      });
+    } else {
+      // If no relations, perform soft delete
+      await this.prisma.lesson.update({
+        where: { id },
+        data: {
+          ...softDeleteQuery,
+        },
+      });
+    }
 
     return { message: 'Lesson deleted successfully' };
   }

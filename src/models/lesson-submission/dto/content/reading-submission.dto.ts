@@ -9,6 +9,9 @@ class AnswerDTO {
 
 export class QuestionDTO {
   @ApiProperty()
+  id: string;
+
+  @ApiProperty()
   question: string;
 
   @ApiProperty()
@@ -19,11 +22,17 @@ export class QuestionDTO {
   @ValidateNested({ each: true })
   @Type(() => AnswerDTO)
   answer_list: AnswerDTO[];
+
+  @ApiProperty()
+  is_bookmark: boolean;
+
+  @ApiProperty()
+  selected_answer: string;
 }
 
-export class ContentListeningDTO {
+export class ContentReadingSubmissionDTO {
   @ApiProperty()
-  audio_url: string;
+  text: string;
 
   @ApiProperty({ type: [QuestionDTO] })
   @IsArray()

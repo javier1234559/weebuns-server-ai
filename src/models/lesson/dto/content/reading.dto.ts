@@ -22,12 +22,6 @@ export class QuestionDTO {
   @ValidateNested({ each: true })
   @Type(() => AnswerDTO)
   answer_list: AnswerDTO[];
-
-  @ApiProperty()
-  is_bookmark: boolean;
-
-  @ApiProperty()
-  selected_answer: string;
 }
 
 export class ContentReadingDTO {

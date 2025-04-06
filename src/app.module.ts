@@ -4,9 +4,17 @@ import { UserModule } from 'src/models/user/user.module';
 import { AiModule } from 'src/ai/ai.module';
 import { LessonModule } from 'src/models/lesson/lesson.module';
 import { CommentModule } from 'src/models/comment/comment.module';
+import { LessonSubmission } from './models/lesson-submission/entities/lesson-submission.entity';
 
 @Module({
-  imports: [AiModule, UserModule, CommonModule, LessonModule, CommentModule],
+  imports: [
+    AiModule,
+    UserModule,
+    CommonModule,
+    LessonModule,
+    CommentModule,
+    LessonSubmission,
+  ],
   controllers: [],
   providers: [],
 })

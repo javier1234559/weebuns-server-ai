@@ -9,19 +9,25 @@ class AnswerDTO {
 
 export class QuestionDTO {
   @ApiProperty()
+  id: string;
+
+  @ApiProperty()
   question: string;
 
   @ApiProperty()
   right_answer: string;
 
   @ApiProperty({ type: [AnswerDTO] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => AnswerDTO)
   answer_list: AnswerDTO[];
+
+  @ApiProperty()
+  is_bookmark: boolean;
+
+  @ApiProperty()
+  selected_answer: string;
 }
 
-export class ContentListeningDTO {
+export class ContentListeningSubmissionDTO {
   @ApiProperty()
   audio_url: string;
 
@@ -29,5 +35,5 @@ export class ContentListeningDTO {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => QuestionDTO)
-  questions: QuestionDTO[];
+  question_list: QuestionDTO[];
 }
