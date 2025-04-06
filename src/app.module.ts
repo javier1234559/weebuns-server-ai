@@ -7,7 +7,14 @@ import { CommentModule } from 'src/models/comment/comment.module';
 import { LessonSubmission } from './models/lesson-submission/entities/lesson-submission.entity';
 
 @Module({
-  imports: [AiModule, UserModule, CommonModule, LessonModule, CommentModule, LessonSubmission],
+  imports: [
+    AiModule,
+    UserModule,
+    CommonModule,
+    LessonModule,
+    CommentModule,
+    LessonSubmission,
+  ],
   controllers: [],
   providers: [],
 })
