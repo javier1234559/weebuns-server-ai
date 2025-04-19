@@ -11,8 +11,6 @@ import {
 } from '@nestjs/common';
 import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { AuthGuard } from 'src/common/auth/auth.guard';
-import { RolesGuard } from 'src/common/auth/role.guard';
 import { CacheKeyDto } from 'src/common/decorators/cache-key.decorator';
 import { Roles, UserRole } from 'src/common/decorators/role.decorator';
 import {
@@ -24,10 +22,15 @@ import { TtsService } from 'src/ai/tts.service';
 import { AiService } from './ai.service';
 import { CheckGrammarResponseDto } from './dto/check-grammar-response.dto';
 import { CheckGrammarDto } from './dto/check-grammar.dto';
+import { ChatRequestDto, ChatResponseDto } from './dto/chat.dto';
 import { RecommendTopicsResponseDto } from './dto/recommend-topics-response.dto';
 import { RecommendTopicsDto } from './dto/recommend-topics.dto';
 import { TranslateResponseDto } from './dto/translate-response.dto';
 import { TranslateDto } from './dto/translate.dto';
+import { EvaluateEssayResponseDto } from 'src/ai/dto/evaluate-essay-response.dto';
+import { EvaluateEssayDto } from 'src/ai/dto/evaluate-essay.dto';
+import { RolesGuard } from 'src/common/auth/role.guard';
+import { AuthGuard } from 'src/common/auth/auth.guard';
 
 @Controller('ai')
 @ApiTags('ai')
@@ -108,5 +111,30 @@ export class AiController {
   })
   async textToSpeechAll(): Promise<any> {
     return this.ttsService.getAll();
+  }
+
+  @Post('chat')
+  // @Roles(UserRole.USER)
+  @ApiBody({ type: ChatRequestDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ChatResponseDto,
+    description: 'Chat response generated successfully',
+  })
+  async chat(@Body() dto: ChatRequestDto): Promise<ChatResponseDto> {
+    return this.aiService.chat(dto);
+  }
+
+  @Post('evaluate-essay')
+  @Roles(UserRole.USER)
+  @ApiBody({ type: EvaluateEssayDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: EvaluateEssayResponseDto,
+  })
+  async evaluateEssay(
+    @Body() dto: EvaluateEssayDto,
+  ): Promise<EvaluateEssayResponseDto> {
+    return this.aiService.evaluateEssay(dto);
   }
 }

@@ -13,32 +13,33 @@ import { ContentListeningSubmissionDTO } from './content/listening-submission.dt
 import { ContentWritingSubmissionDTO } from './content/writing-submission.dto';
 import { ContentSpeakingSubmissionDTO } from './content/speaking-submission.dto';
 import { PaginationInputDto } from 'src/common/dto/pagination.dto';
+import { WritingFeedbackDTO } from './feedback/writing.dto';
 
 export class BaseLessonSubmissionDTO {
   @ApiProperty()
   @IsString()
   lessonId: string;
 
-  @ApiProperty()
-  @IsString()
-  userId: string;
+  // @ApiProperty()
+  // @IsString()
+  // userId: string;
 
   @ApiProperty({ enum: SkillType })
   @IsEnum(SkillType)
   submissionType: SkillType;
 
-  @ApiProperty({ enum: SubmissionStatus })
-  @IsEnum(SubmissionStatus)
-  status: SubmissionStatus;
+  // @ApiProperty({ enum: SubmissionStatus })
+  // @IsEnum(SubmissionStatus)
+  // status: SubmissionStatus;
 
   @ApiProperty()
   @IsNumber()
   tokensUsed: number;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  gradedById?: string;
+  // @ApiPropertyOptional()
+  // @IsOptional()
+  // @IsString()
+  // gradedById?: string;
 }
 
 export class CreateReadingSubmissionDTO extends BaseLessonSubmissionDTO {
@@ -84,6 +85,12 @@ export class UpdateWritingSubmissionDTO extends BaseLessonSubmissionDTO {
   @ValidateNested()
   @Type(() => ContentWritingSubmissionDTO)
   content?: ContentWritingSubmissionDTO;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WritingFeedbackDTO)
+  feedback?: WritingFeedbackDTO;
 }
 
 export class CreateSpeakingSubmissionDTO extends BaseLessonSubmissionDTO {
@@ -105,6 +112,11 @@ export class FindAllLessonSubmissionQuery extends PaginationInputDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  search?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   userId?: string;
 
   @ApiPropertyOptional()
@@ -121,9 +133,21 @@ export class FindAllLessonSubmissionQuery extends PaginationInputDto {
   @IsOptional()
   @IsEnum(SubmissionStatus)
   status?: SubmissionStatus;
+}
 
+export class FindAllReadingSubmissionsByUserQuery extends PaginationInputDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  gradedById?: string;
+  search?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEnum(SkillType)
+  submissionType?: SkillType;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEnum(SubmissionStatus)
+  status?: SubmissionStatus;
 }

@@ -2,8 +2,9 @@ import { Prisma, SkillType, SubmissionStatus } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from 'src/models/user/entities/user.entity';
 import { Lesson } from 'src/models/lesson/entities/lesson.entity';
+import { ILessonSubmission } from '../interface/lesson-submission.interface';
 
-export class LessonSubmission {
+export class LessonSubmission implements ILessonSubmission {
   @ApiProperty({
     type: 'string',
   })
@@ -84,4 +85,10 @@ export class LessonSubmission {
     nullable: true,
   })
   gradedBy?: User | null;
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
+  })
+  deletedAt: Date | null;
 }

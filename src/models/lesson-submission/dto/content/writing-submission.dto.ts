@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsArray, ValidateNested, IsObject } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ChatMessageDTO {
@@ -20,18 +20,34 @@ class ChatMessageDTO {
   timestamp: string;
 }
 
+class UserDataDTO {
+  @ApiProperty()
+  @IsString()
+  instruction: string;
+
+  @ApiProperty()
+  @IsString()
+  body1: string;
+
+  @ApiProperty()
+  @IsString()
+  body2: string;
+
+  @ApiProperty()
+  @IsString()
+  conclusion: string;
+}
+
 export class ContentWritingSubmissionDTO {
-  @ApiProperty()
-  @IsString()
-  content_text: string; // Nội dung câu hỏi chính
+  @ApiProperty({ type: UserDataDTO })
+  @IsObject()
+  @ValidateNested()
+  @Type(() => UserDataDTO)
+  user_data: UserDataDTO;
 
   @ApiProperty()
   @IsString()
-  prompt_text: string; // Tiêu chí chấm điểm hoặc hướng dẫn của AI
-
-  @ApiProperty()
-  @IsString()
-  content_user_text: string; // Bài viết của người dùng
+  lesson_id: string;
 
   @ApiProperty({ type: [ChatMessageDTO] })
   @IsArray()

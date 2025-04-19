@@ -89,6 +89,32 @@ export class LessonController {
     return this.lessonService.updateReading(id, dto);
   }
 
+  // @Post('reading/:id/submit')
+  // @ApiResponse({
+  //   status: HttpStatus.CREATED,
+  //   type: ReadingSubmissionResponse,
+  // })
+  // submitReading(
+  //   @Param('id') id: string,
+  //   @CurrentUser() user: IAuthPayload,
+  //   @Body() dto: SubmitReadingLessonDto,
+  // ): Promise<ReadingSubmissionResponse> {
+  //   const userId = String(user.sub);
+  //   return this.lessonService.submitReading(id, userId, dto);
+  // }
+
+  // @Get('reading/:id/result/:submissionId')
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   type: ReadingResultResponse,
+  // })
+  // getReadingResult(
+  //   @Param('id') id: string,
+  //   @Param('submissionId') submissionId: string,
+  // ): Promise<ReadingResultResponse> {
+  //   return this.lessonService.getReadingResult(id, submissionId);
+  // }
+
   @Get('listening/:id')
   @Public()
   @ApiResponse({ status: 200, type: ListeningResponse })

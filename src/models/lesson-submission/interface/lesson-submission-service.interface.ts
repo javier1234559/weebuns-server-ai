@@ -1,41 +1,66 @@
-import { 
-    CreateReadingSubmissionDTO, 
-    FindAllLessonSubmissionQuery, 
-    UpdateReadingSubmissionDTO, 
-    CreateListeningSubmissionDTO, 
-    UpdateListeningSubmissionDTO, 
-    CreateSpeakingSubmissionDTO, 
-    UpdateSpeakingSubmissionDTO, 
-    CreateWritingSubmissionDTO, 
-    UpdateWritingSubmissionDTO 
-} from "../dto/lesson-submission-request.dto";
+import {
+  CreateReadingSubmissionDTO,
+  FindAllLessonSubmissionQuery,
+  CreateListeningSubmissionDTO,
+  CreateSpeakingSubmissionDTO,
+  CreateWritingSubmissionDTO,
+  UpdateWritingSubmissionDTO,
+  FindAllReadingSubmissionsByUserQuery,
+} from '../dto/lesson-submission-request.dto';
 
-import { 
-    DeleteLessonSubmissionResponse, 
-    LessonSubmissionsResponse, 
-    ReadingSubmissionResponse, 
-    ListeningSubmissionResponse, 
-    SpeakingSubmissionResponse, 
-    WritingSubmissionResponse 
-} from "../dto/lesson-submission-response.dto";
+import {
+  DeleteLessonSubmissionResponse,
+  LessonSubmissionsResponse,
+  ReadingSubmissionResponse,
+  ListeningSubmissionResponse,
+  SpeakingSubmissionResponse,
+  WritingSubmissionResponse,
+  WritingSubmissionResultResponse,
+} from '../dto/lesson-submission-response.dto';
 
 export interface ILessonSubmissionService {
-    findAllSubmissions(query: FindAllLessonSubmissionQuery): Promise<LessonSubmissionsResponse>;
-    delete(id: string): Promise<DeleteLessonSubmissionResponse>;
+  // Common
+  findAllSubmissions(
+    query: FindAllLessonSubmissionQuery,
+  ): Promise<LessonSubmissionsResponse>;
+  getAllSubmissionsByUser(
+    userId: string,
+    query: FindAllReadingSubmissionsByUserQuery,
+  ): Promise<LessonSubmissionsResponse>;
+  delete(id: string): Promise<DeleteLessonSubmissionResponse>;
 
-    findOneReadingSubmission(id: string): Promise<ReadingSubmissionResponse>;
-    createReadingSubmission(dto: CreateReadingSubmissionDTO): Promise<ReadingSubmissionResponse>;
-    updateReadingSubmission(id: string, dto: UpdateReadingSubmissionDTO): Promise<ReadingSubmissionResponse>;
+  // Reading
+  findOneReadingSubmission(id: string): Promise<ReadingSubmissionResponse>;
+  createReadingSubmission(
+    userId: string,
+    dto: CreateReadingSubmissionDTO,
+  ): Promise<ReadingSubmissionResponse>;
 
-    findOneListeningSubmission(id: string): Promise<ListeningSubmissionResponse>;
-    createListeningSubmission(dto: CreateListeningSubmissionDTO): Promise<ListeningSubmissionResponse>;
-    updateListeningSubmission(id: string, dto: UpdateListeningSubmissionDTO): Promise<ListeningSubmissionResponse>;
+  // Listening
+  findOneListeningSubmission(id: string): Promise<ListeningSubmissionResponse>;
+  createListeningSubmission(
+    userId: string,
+    dto: CreateListeningSubmissionDTO,
+  ): Promise<ListeningSubmissionResponse>;
 
-    findOneSpeakingSubmission(id: string): Promise<SpeakingSubmissionResponse>;
-    createSpeakingSubmission(dto: CreateSpeakingSubmissionDTO): Promise<SpeakingSubmissionResponse>;
-    updateSpeakingSubmission(id: string, dto: UpdateSpeakingSubmissionDTO): Promise<SpeakingSubmissionResponse>;
+  // Speaking
+  findOneSpeakingSubmission(id: string): Promise<SpeakingSubmissionResponse>;
+  createSpeakingSubmission(
+    userId: string,
+    dto: CreateSpeakingSubmissionDTO,
+  ): Promise<SpeakingSubmissionResponse>;
 
-    findOneWritingSubmission(id: string): Promise<WritingSubmissionResponse>;
-    createWritingSubmission(dto: CreateWritingSubmissionDTO): Promise<WritingSubmissionResponse>;
-    updateWritingSubmission(id: string, dto: UpdateWritingSubmissionDTO): Promise<WritingSubmissionResponse>;
+  // Writing
+  findOneWritingSubmission(
+    id: string,
+  ): Promise<WritingSubmissionResultResponse>;
+  createWritingSubmission(
+    userId: string,
+    dto: CreateWritingSubmissionDTO,
+  ): Promise<WritingSubmissionResponse>;
+  updateWritingSubmission(
+    id: string,
+    userId: string,
+    dto: UpdateWritingSubmissionDTO,
+  ): Promise<WritingSubmissionResponse>;
 }

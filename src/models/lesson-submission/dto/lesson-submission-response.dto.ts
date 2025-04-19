@@ -5,6 +5,11 @@ import { ContentListeningSubmissionDTO } from './content/listening-submission.dt
 import { ContentWritingSubmissionDTO } from './content/writing-submission.dto';
 import { ContentSpeakingSubmissionDTO } from './content/speaking-submission.dto';
 import { PaginationOutputDto } from 'src/common/dto/pagination.dto';
+import { ReadingFeedbackDto } from 'src/models/lesson-submission/dto/feedback/reading.dto';
+import { ListeningFeedbackDto } from 'src/models/lesson-submission/dto/feedback/listening.dto';
+import { WritingFeedbackDTO } from 'src/models/lesson-submission/dto/feedback/writing.dto';
+import { Prisma } from '@prisma/client';
+import { SampleEssayDTO } from 'src/models/lesson/dto/content/writing.dto';
 
 // Base Lesson Submission Response
 export class BaseLessonSubmissionResponse {
@@ -27,33 +32,77 @@ export class DeleteLessonSubmissionResponse {
 }
 
 // Reading Submission Response
+export class ReadingSubmission extends LessonSubmission {
+  @ApiProperty({
+    type: () => ContentReadingSubmissionDTO,
+  })
+  content: ContentReadingSubmissionDTO & Prisma.JsonValue;
+
+  @ApiProperty({
+    type: () => ReadingFeedbackDto,
+  })
+  feedback: ReadingFeedbackDto & Prisma.JsonValue;
+}
+
 export class ReadingSubmissionResponse extends BaseLessonSubmissionResponse {
-  @ApiProperty()
-  data: LessonSubmission & {
-    content: ContentReadingSubmissionDTO;
-  };
+  @ApiProperty({ type: ReadingSubmission })
+  data: ReadingSubmission;
 }
 
 // Listening Submission Response
+export class ListeningSubmission extends LessonSubmission {
+  @ApiProperty({
+    type: () => ContentListeningSubmissionDTO,
+  })
+  content: ContentListeningSubmissionDTO & Prisma.JsonValue;
+
+  @ApiProperty({
+    type: () => ListeningFeedbackDto,
+  })
+  feedback: ListeningFeedbackDto & Prisma.JsonValue;
+}
+
 export class ListeningSubmissionResponse extends BaseLessonSubmissionResponse {
-  @ApiProperty()
-  data: LessonSubmission & {
-    content: ContentListeningSubmissionDTO;
-  };
+  @ApiProperty({ type: ListeningSubmission })
+  data: ListeningSubmission;
 }
 
 // Writing Submission Response
+export class WritingSubmission extends LessonSubmission {
+  @ApiProperty({
+    type: () => ContentWritingSubmissionDTO,
+  })
+  content: ContentWritingSubmissionDTO & Prisma.JsonValue;
+
+  @ApiProperty({
+    type: () => WritingFeedbackDTO,
+  })
+  feedback: WritingFeedbackDTO & Prisma.JsonValue;
+}
+
 export class WritingSubmissionResponse extends BaseLessonSubmissionResponse {
-  @ApiProperty()
-  data: LessonSubmission & {
-    content: ContentWritingSubmissionDTO;
-  };
+  @ApiProperty({ type: WritingSubmission })
+  data: WritingSubmission;
+}
+
+export class WritingSubmissionResultResponse extends BaseLessonSubmissionResponse {
+  @ApiProperty({ type: WritingSubmission })
+  data: WritingSubmission;
+
+  @ApiProperty({
+    type: () => SampleEssayDTO,
+  })
+  exampleEssay: SampleEssayDTO & Prisma.JsonValue;
 }
 
 // Speaking Submission Response
+export class SpeakingSubmission extends LessonSubmission {
+  @ApiProperty({
+    type: () => ContentSpeakingSubmissionDTO,
+  })
+  content: ContentSpeakingSubmissionDTO & Prisma.JsonValue;
+}
 export class SpeakingSubmissionResponse extends BaseLessonSubmissionResponse {
-  @ApiProperty()
-  data: LessonSubmission & {
-    content: ContentSpeakingSubmissionDTO;
-  };
+  @ApiProperty({ type: SpeakingSubmission })
+  data: SpeakingSubmission;
 }

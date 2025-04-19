@@ -1,11 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { ContentStatus, LessonType, SkillType } from '@prisma/client';
 import { ContentReadingDTO } from './content/reading.dto';
 import { ContentListeningDTO } from './content/listening.dto';
 import { ContentWritingDTO } from './content/writing.dto';
 import { ContentSpeakingDTO } from './content/speaking.dto';
 import { PaginationInputDto } from 'src/common/dto/pagination.dto';
+import { Type } from 'class-transformer';
 
 export class BaseLessonDTO {
   @ApiProperty()
@@ -125,4 +133,21 @@ export class FindAllLessonQuery extends PaginationInputDto {
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   tag?: string[];
+}
+
+export class SubmitReadingLessonDto {
+  @ApiProperty({ type: ContentReadingDTO })
+  @ValidateNested()
+  @Type(() => ContentReadingDTO)
+  content: ContentReadingDTO;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  tokens_used?: number;
+
+  @ApiProperty()
+  @IsDateString()
+  @IsOptional()
+  submitted_at?: string;
 }

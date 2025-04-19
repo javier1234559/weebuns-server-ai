@@ -127,4 +127,3 @@ export class CommentController {
     return this.commentService.remove(id, req.user.id);
   }
 }
-

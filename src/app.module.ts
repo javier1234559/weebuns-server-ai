@@ -4,7 +4,7 @@ import { UserModule } from 'src/models/user/user.module';
 import { AiModule } from 'src/ai/ai.module';
 import { LessonModule } from 'src/models/lesson/lesson.module';
 import { CommentModule } from 'src/models/comment/comment.module';
-import { LessonSubmission } from './models/lesson-submission/entities/lesson-submission.entity';
+import { LessonSubmissionModule } from 'src/models/lesson-submission/lesson-submission.module';
 
 @Module({
   imports: [
@@ -13,7 +13,7 @@ import { LessonSubmission } from './models/lesson-submission/entities/lesson-sub
     CommonModule,
     LessonModule,
     CommentModule,
-    LessonSubmission,
+    LessonSubmissionModule,
   ],
   controllers: [],
   providers: [],

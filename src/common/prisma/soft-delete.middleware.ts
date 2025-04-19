@@ -1,6 +1,6 @@
 import { ContentStatus, Prisma, PrismaClient } from '@prisma/client';
 
-export const createSoftDeleteMiddleware = (prisma: PrismaClient) => {
+export const createSoftDeleteMiddleware = (_prisma: PrismaClient) => {
   return async (params: Prisma.MiddlewareParams, next: any) => {
     // if (params.model !== 'Essay') {
     //   return next(params);

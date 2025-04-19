@@ -7,9 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { JwtService } from '@nestjs/jwt';
-
 import { Request } from 'express';
-
 import { IS_PUBLIC_KEY } from 'src/common/decorators/public.decorator';
 import { IAuthPayload } from 'src/common/interface/auth-payload.interface';
 import { PrismaService } from 'src/common/prisma/prisma.service';

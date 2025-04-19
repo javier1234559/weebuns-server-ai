@@ -10,22 +10,20 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { LessonSubmissionService } from './lesson-submission.service';
-import { FindAllLessonSubmissionQuery } from './dto/lesson-submission-request.dto';
+import {
+  FindAllLessonSubmissionQuery,
+  FindAllReadingSubmissionsByUserQuery,
+  CreateReadingSubmissionDTO,
+  CreateListeningSubmissionDTO,
+  CreateSpeakingSubmissionDTO,
+  CreateWritingSubmissionDTO,
+  UpdateWritingSubmissionDTO,
+} from './dto/lesson-submission-request.dto';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { UserRole } from 'src/common/decorators/role.decorator';
 import { RolesGuard } from 'src/common/auth/role.guard';
 import { AuthGuard } from 'src/common/auth/auth.guard';
 import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
-import {
-  CreateReadingSubmissionDTO,
-  UpdateReadingSubmissionDTO,
-  CreateListeningSubmissionDTO,
-  UpdateListeningSubmissionDTO,
-  CreateWritingSubmissionDTO,
-  UpdateWritingSubmissionDTO,
-  CreateSpeakingSubmissionDTO,
-  UpdateSpeakingSubmissionDTO,
-} from './dto/lesson-submission-request.dto';
 import {
   LessonSubmissionsResponse,
   ReadingSubmissionResponse,
@@ -33,10 +31,10 @@ import {
   WritingSubmissionResponse,
   SpeakingSubmissionResponse,
   DeleteLessonSubmissionResponse,
+  WritingSubmissionResultResponse,
 } from './dto/lesson-submission-response.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { IAuthPayload } from 'src/common/interface/auth-payload.interface';
-import { FeedbackDTO } from './dto/feedback.dto';
 
 @ApiTags('lesson-submissions')
 @Controller('lesson-submissions')
@@ -48,11 +46,24 @@ export class LessonSubmissionController {
   ) {}
 
   @Get()
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiResponse({ status: 200, type: LessonSubmissionsResponse })
   findAll(
     @Query() query: FindAllLessonSubmissionQuery,
   ): Promise<LessonSubmissionsResponse> {
     return this.lessonSubmissionService.findAllSubmissions(query);
+  }
+
+  @Get('user')
+  @Roles(UserRole.USER)
+  @ApiResponse({ status: 200, type: LessonSubmissionsResponse })
+  getAllSubmissionsByUser(
+    @Query() query: FindAllReadingSubmissionsByUserQuery,
+    @CurrentUser() user: IAuthPayload,
+  ): Promise<LessonSubmissionsResponse> {
+    const userId = String(user.sub);
+    console.log(userId);
+    return this.lessonSubmissionService.getAllSubmissionsByUser(userId, query);
   }
 
   @Delete(':id')
@@ -75,18 +86,8 @@ export class LessonSubmissionController {
     @Body() dto: CreateReadingSubmissionDTO,
     @CurrentUser() user: IAuthPayload,
   ): Promise<ReadingSubmissionResponse> {
-    dto.userId = String(user.sub);
-    return this.lessonSubmissionService.createReadingSubmission(dto);
-  }
-
-  @Patch('reading/:id')
-  @Roles(UserRole.USER)
-  @ApiResponse({ status: 200, type: ReadingSubmissionResponse })
-  updateReading(
-    @Param('id') id: string,
-    @Body() dto: UpdateReadingSubmissionDTO,
-  ): Promise<ReadingSubmissionResponse> {
-    return this.lessonSubmissionService.updateReadingSubmission(id, dto);
+    const userId = String(user.sub);
+    return this.lessonSubmissionService.createReadingSubmission(userId, dto);
   }
 
   @Get('listening/:id')
@@ -104,45 +105,8 @@ export class LessonSubmissionController {
     @Body() dto: CreateListeningSubmissionDTO,
     @CurrentUser() user: IAuthPayload,
   ): Promise<ListeningSubmissionResponse> {
-    dto.userId = String(user.sub);
-    return this.lessonSubmissionService.createListeningSubmission(dto);
-  }
-
-  @Patch('listening/:id')
-  @Roles(UserRole.USER)
-  @ApiResponse({ status: 200, type: ListeningSubmissionResponse })
-  updateListening(
-    @Param('id') id: string,
-    @Body() dto: UpdateListeningSubmissionDTO,
-  ): Promise<ListeningSubmissionResponse> {
-    return this.lessonSubmissionService.updateListeningSubmission(id, dto);
-  }
-
-  @Get('writing/:id')
-  @ApiResponse({ status: 200, type: WritingSubmissionResponse })
-  findOneWriting(@Param('id') id: string): Promise<WritingSubmissionResponse> {
-    return this.lessonSubmissionService.findOneWritingSubmission(id);
-  }
-
-  @Post('writing')
-  @Roles(UserRole.USER)
-  @ApiResponse({ status: 201, type: WritingSubmissionResponse })
-  createWriting(
-    @Body() dto: CreateWritingSubmissionDTO,
-    @CurrentUser() user: IAuthPayload,
-  ): Promise<WritingSubmissionResponse> {
-    dto.userId = String(user.sub);
-    return this.lessonSubmissionService.createWritingSubmission(dto);
-  }
-
-  @Patch('writing/:id')
-  @Roles(UserRole.USER)
-  @ApiResponse({ status: 200, type: WritingSubmissionResponse })
-  updateWriting(
-    @Param('id') id: string,
-    @Body() dto: UpdateWritingSubmissionDTO,
-  ): Promise<WritingSubmissionResponse> {
-    return this.lessonSubmissionService.updateWritingSubmission(id, dto);
+    const userId = String(user.sub);
+    return this.lessonSubmissionService.createListeningSubmission(userId, dto);
   }
 
   @Get('speaking/:id')
@@ -160,32 +124,42 @@ export class LessonSubmissionController {
     @Body() dto: CreateSpeakingSubmissionDTO,
     @CurrentUser() user: IAuthPayload,
   ): Promise<SpeakingSubmissionResponse> {
-    dto.userId = String(user.sub);
-    return this.lessonSubmissionService.createSpeakingSubmission(dto);
+    const userId = String(user.sub);
+    return this.lessonSubmissionService.createSpeakingSubmission(userId, dto);
   }
 
-  @Patch('speaking/:id')
+  @Get('writing/:id')
+  @ApiResponse({ status: 200, type: WritingSubmissionResultResponse })
+  findOneWriting(
+    @Param('id') id: string,
+  ): Promise<WritingSubmissionResultResponse> {
+    return this.lessonSubmissionService.findOneWritingSubmission(id);
+  }
+
+  @Post('writing')
   @Roles(UserRole.USER)
-  @ApiResponse({ status: 200, type: SpeakingSubmissionResponse })
-  updateSpeaking(
-    @Param('id') id: string,
-    @Body() dto: UpdateSpeakingSubmissionDTO,
-  ): Promise<SpeakingSubmissionResponse> {
-    return this.lessonSubmissionService.updateSpeakingSubmission(id, dto);
-  }
-
-  @Patch('writing/:id/feedback')
-  @Roles(UserRole.TEACHER)
-  @ApiResponse({ status: 200, type: WritingSubmissionResponse })
-  updateWritingFeedback(
-    @Param('id') id: string,
-    @Body() dto: FeedbackDTO,
+  @ApiResponse({ status: 201, type: WritingSubmissionResponse })
+  createWriting(
+    @Body() dto: CreateWritingSubmissionDTO,
     @CurrentUser() user: IAuthPayload,
   ): Promise<WritingSubmissionResponse> {
-    return this.lessonSubmissionService.updateWritingTeacherFeedback(
+    const userId = String(user.sub);
+    return this.lessonSubmissionService.createWritingSubmission(userId, dto);
+  }
+
+  @Patch('writing/:id')
+  @Roles(UserRole.TEACHER)
+  @ApiResponse({ status: 200, type: WritingSubmissionResponse })
+  updateWriting(
+    @Param('id') id: string,
+    @Body() dto: UpdateWritingSubmissionDTO,
+    @CurrentUser() user: IAuthPayload,
+  ): Promise<WritingSubmissionResponse> {
+    const userId = String(user.sub);
+    return this.lessonSubmissionService.updateWritingSubmission(
       id,
+      userId,
       dto,
-      String(user.sub),
     );
   }
 }

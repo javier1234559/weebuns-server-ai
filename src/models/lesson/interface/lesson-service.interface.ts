@@ -27,6 +27,16 @@ export interface ILessonService {
   findOneReading(id: string): Promise<ReadingResponse>;
   createReading(dto: CreateReadingDTO): Promise<ReadingResponse>;
   updateReading(id: string, dto: UpdateReadingDTO): Promise<ReadingResponse>;
+  // submitReading(
+  //   lessonId: string,
+  //   userId: string,
+  //   dto: SubmitReadingLessonDto,
+  // ): Promise<ReadingSubmissionResponse>;
+
+  // getReadingResult(
+  //   lessonId: string,
+  //   submissionId: string,
+  // ): Promise<ReadingResultResponse>;
 
   // Listening methods
   findOneListening(id: string): Promise<ListeningResponse>;

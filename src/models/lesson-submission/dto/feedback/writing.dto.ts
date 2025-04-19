@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsObject, ValidateNested } from 'class-validator';
+import { IsString, IsNumber, ValidateNested, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class CorrectionDTO {
@@ -9,30 +9,22 @@ class CorrectionDTO {
 
   @ApiProperty()
   @IsString()
-  originalText: string;
+  sentence: string;
 
   @ApiProperty()
   @IsString()
-  correctedText: string;
+  error: string;
 
   @ApiProperty()
   @IsString()
-  comment: string;
+  suggestion: string;
 
   @ApiProperty()
   @IsString()
-  context: string;
-
-  @ApiProperty()
-  @IsString()
-  positionInContext: string;
-
-  @ApiProperty()
-  @IsString()
-  createdAt: string;
+  reason: string;
 }
 
-export class FeedbackDTO {
+export class WritingFeedbackDTO {
   @ApiProperty()
   @IsNumber()
   overall_score: number;
@@ -53,11 +45,11 @@ export class FeedbackDTO {
   @IsNumber()
   grammar: number;
 
-  @ApiProperty({ type: CorrectionDTO }) // Định nghĩa correction là một object
-  @IsObject()
-  @ValidateNested()
+  @ApiProperty({ type: [CorrectionDTO] })
+  @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => CorrectionDTO)
-  corrections: CorrectionDTO;
+  corrections: CorrectionDTO[];
 
   @ApiProperty()
   @IsString()

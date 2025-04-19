@@ -7,4 +7,3 @@ export class CreateCommentResponseDto {
   })
   comment: Comment;
 }
-

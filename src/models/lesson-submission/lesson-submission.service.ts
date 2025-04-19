@@ -7,10 +7,8 @@ import {
   CreateSpeakingSubmissionDTO,
   CreateWritingSubmissionDTO,
   FindAllLessonSubmissionQuery,
-  UpdateReadingSubmissionDTO,
-  UpdateListeningSubmissionDTO,
-  UpdateSpeakingSubmissionDTO,
   UpdateWritingSubmissionDTO,
+  FindAllReadingSubmissionsByUserQuery,
 } from './dto/lesson-submission-request.dto';
 import {
   DeleteLessonSubmissionResponse,
@@ -19,16 +17,32 @@ import {
   ListeningSubmissionResponse,
   SpeakingSubmissionResponse,
   WritingSubmissionResponse,
+  ReadingSubmission,
+  ListeningSubmission,
+  SpeakingSubmission,
+  WritingSubmission,
+  WritingSubmissionResultResponse,
 } from './dto/lesson-submission-response.dto';
 import {
   notDeletedQuery,
-  searchQuery,
   paginationQuery,
   softDeleteQuery,
 } from 'src/common/helper/prisma-queries.helper';
-import { SkillType, SubmissionStatus } from '@prisma/client';
+import { SkillType, SubmissionStatus, LessonSubmission } from '@prisma/client';
 import { calculatePagination } from 'src/common/utils/pagination';
-import { FeedbackDTO } from './dto/feedback.dto';
+import { ReadingFeedbackDto } from './dto/feedback/reading.dto';
+import { ListeningFeedbackDto } from './dto/feedback/listening.dto';
+import { WritingFeedbackDTO } from './dto/feedback/writing.dto';
+import { ContentReadingSubmissionDTO } from './dto/content/reading-submission.dto';
+import { ContentListeningSubmissionDTO } from './dto/content/listening-submission.dto';
+import { ContentWritingSubmissionDTO } from './dto/content/writing-submission.dto';
+import { ContentSpeakingSubmissionDTO } from './dto/content/speaking-submission.dto';
+import { serializeJSON } from 'src/common/utils/format';
+import {
+  ContentWritingDTO,
+  SampleEssayDTO,
+} from 'src/models/lesson/dto/content/writing.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class LessonSubmissionService implements ILessonSubmissionService {
@@ -37,48 +51,46 @@ export class LessonSubmissionService implements ILessonSubmissionService {
   private readonly submissionIncludeQuery = {
     include: {
       lesson: true,
-      user: {
-        include: {
-          teacherProfile: true,
-          studentProfile: true,
-        },
-      },
-      gradedBy: {
-        include: {
-          teacherProfile: true, // Thêm profile giáo viên
-          studentProfile: true, // Thêm profile học sinh
-        },
-      },
+      user: true,
+      gradedBy: true,
     },
   };
 
-  private transformContent(content: any, type: SkillType) {
-    switch (type) {
+  private transformContent(content: any, skill: SkillType) {
+    switch (skill) {
       case 'reading':
-        return content;
+        return content as ContentReadingSubmissionDTO;
       case 'listening':
-        return content;
+        return content as ContentListeningSubmissionDTO;
       case 'writing':
-        return content;
+        return content as ContentWritingSubmissionDTO;
       case 'speaking':
-        return content;
+        return content as ContentSpeakingSubmissionDTO;
       default:
         return content;
+    }
+  }
+
+  private transformFeedback(feedback: any, type: SkillType) {
+    switch (type) {
+      case 'reading':
+        return feedback as ReadingFeedbackDto;
+      case 'listening':
+        return feedback as ListeningFeedbackDto;
+      case 'writing':
+        return feedback as WritingFeedbackDTO;
+      case 'speaking':
+        return feedback;
+      default:
+        return feedback;
     }
   }
 
   async findAllSubmissions(
     query: FindAllLessonSubmissionQuery,
   ): Promise<LessonSubmissionsResponse> {
-    const {
-      page,
-      perPage,
-      userId,
-      lessonId,
-      submissionType,
-      status,
-      gradedById,
-    } = query;
+    const { page, perPage, userId, lessonId, submissionType, status, search } =
+      query;
 
     const queryOptions = {
       where: {
@@ -87,7 +99,16 @@ export class LessonSubmissionService implements ILessonSubmissionService {
         ...(lessonId && { lessonId }),
         ...(submissionType && { submissionType }),
         ...(status && { status }),
-        ...(gradedById && { gradedById }),
+        ...(search
+          ? {
+              lesson: {
+                title: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+            }
+          : {}),
       },
       orderBy: { createdAt: 'desc' },
       ...paginationQuery(page, perPage),
@@ -100,7 +121,46 @@ export class LessonSubmissionService implements ILessonSubmissionService {
     ]);
 
     return {
-      data: submissions,
+      data: submissions as unknown as LessonSubmission[],
+      pagination: calculatePagination(totalItems, query),
+    };
+  }
+
+  async getAllSubmissionsByUser(
+    userId: string,
+    query: FindAllReadingSubmissionsByUserQuery,
+  ): Promise<LessonSubmissionsResponse> {
+    const { page, perPage, search, submissionType, status } = query;
+
+    const queryOptions = {
+      where: {
+        userId,
+        ...notDeletedQuery,
+        ...(submissionType && { submissionType }),
+        ...(status && { status }),
+        ...(search
+          ? {
+              lesson: {
+                title: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+            }
+          : {}),
+      },
+      orderBy: { createdAt: 'desc' },
+      ...paginationQuery(page, perPage),
+      ...this.submissionIncludeQuery,
+    };
+
+    const [submissions, totalItems] = await Promise.all([
+      this.prisma.lessonSubmission.findMany(queryOptions),
+      this.prisma.lessonSubmission.count({ where: queryOptions.where }),
+    ]);
+
+    return {
+      data: submissions as unknown as LessonSubmission[],
       pagination: calculatePagination(totalItems, query),
     };
   }
@@ -140,64 +200,54 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       throw new NotFoundException(`Reading submission with ID ${id} not found`);
     }
 
+    const transformedSubmission = {
+      ...submission,
+      content: this.transformContent(submission.content, 'reading'),
+      feedback: this.transformFeedback(submission.feedback, 'reading'),
+    } as ReadingSubmission;
+
     return {
-      data: {
-        ...submission,
-        content: this.transformContent(submission.content, 'reading'),
-      },
+      data: transformedSubmission,
     };
   }
 
   async createReadingSubmission(
+    userId: string,
     dto: CreateReadingSubmissionDTO,
   ): Promise<ReadingSubmissionResponse> {
+    // Calculate feedback based on questions
+    const correctAnswers = dto.content.questions.filter(
+      (q) => q.selected_answer === q.right_answer,
+    ).length;
+    const feedback: ReadingFeedbackDto = {
+      totalQuestions: dto.content.questions.length,
+      correctAnswers,
+      incorrectAnswers: dto.content.questions.length - correctAnswers,
+      accuracy: (correctAnswers / dto.content.questions.length) * 100,
+    };
+
     const submission = await this.prisma.lessonSubmission.create({
       data: {
-        ...dto,
-        content: dto.content as any,
+        lessonId: dto.lessonId,
+        userId: userId,
+        submissionType: 'reading' as SkillType,
+        status: SubmissionStatus.completed,
+        tokensUsed: dto.tokensUsed,
+        content: serializeJSON(dto.content),
+        feedback: serializeJSON(feedback),
         submittedAt: new Date(),
       },
       ...this.submissionIncludeQuery,
     });
 
-    return {
-      data: {
-        ...submission,
-        content: this.transformContent(submission.content, 'reading'),
-      },
-    };
-  }
-
-  async updateReadingSubmission(
-    id: string,
-    dto: UpdateReadingSubmissionDTO,
-  ): Promise<ReadingSubmissionResponse> {
-    const submission = await this.prisma.lessonSubmission.findFirst({
-      where: {
-        id,
-        submissionType: 'reading' as SkillType,
-        ...notDeletedQuery,
-      },
-    });
-
-    if (!submission) {
-      throw new NotFoundException(`Reading submission with ID ${id} not found`);
-    }
-
-    const updatedSubmission = await this.prisma.lessonSubmission.update({
-      where: { id },
-      data: {
-        ...dto,
-        content: dto.content as any,
-      },
-      ...this.submissionIncludeQuery,
-    });
+    const transformedSubmission = {
+      ...submission,
+      content: this.transformContent(submission.content, 'reading'),
+      feedback: this.transformFeedback(submission.feedback, 'reading'),
+    } as ReadingSubmission;
 
     return {
-      data: {
-        ...updatedSubmission,
-        content: this.transformContent(updatedSubmission.content, 'reading'),
-      },
+      data: transformedSubmission,
     };
   }
 
@@ -223,17 +273,35 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       data: {
         ...submission,
         content: this.transformContent(submission.content, 'listening'),
-      },
+        feedback: this.transformFeedback(submission.feedback, 'listening'),
+      } as ListeningSubmission,
     };
   }
 
   async createListeningSubmission(
+    userId: string,
     dto: CreateListeningSubmissionDTO,
   ): Promise<ListeningSubmissionResponse> {
+    // Calculate feedback based on questions
+    const correctAnswers = dto.content.question_list.filter(
+      (q) => q.selected_answer === q.right_answer,
+    ).length;
+    const feedback: ListeningFeedbackDto = {
+      totalQuestions: dto.content.question_list.length,
+      correctAnswers,
+      incorrectAnswers: dto.content.question_list.length - correctAnswers,
+      accuracy: (correctAnswers / dto.content.question_list.length) * 100,
+    };
+
     const submission = await this.prisma.lessonSubmission.create({
       data: {
-        ...dto,
-        content: dto.content as any,
+        lessonId: dto.lessonId,
+        userId: userId,
+        submissionType: 'listening' as SkillType,
+        status: SubmissionStatus.completed,
+        tokensUsed: dto.tokensUsed,
+        content: serializeJSON(dto.content),
+        feedback: serializeJSON(feedback),
         submittedAt: new Date(),
       },
       ...this.submissionIncludeQuery,
@@ -243,42 +311,8 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       data: {
         ...submission,
         content: this.transformContent(submission.content, 'listening'),
-      },
-    };
-  }
-
-  async updateListeningSubmission(
-    id: string,
-    dto: UpdateListeningSubmissionDTO,
-  ): Promise<ListeningSubmissionResponse> {
-    const submission = await this.prisma.lessonSubmission.findFirst({
-      where: {
-        id,
-        submissionType: 'listening' as SkillType,
-        ...notDeletedQuery,
-      },
-    });
-
-    if (!submission) {
-      throw new NotFoundException(
-        `Listening submission with ID ${id} not found`,
-      );
-    }
-
-    const updatedSubmission = await this.prisma.lessonSubmission.update({
-      where: { id },
-      data: {
-        ...dto,
-        content: dto.content as any,
-      },
-      ...this.submissionIncludeQuery,
-    });
-
-    return {
-      data: {
-        ...updatedSubmission,
-        content: this.transformContent(updatedSubmission.content, 'listening'),
-      },
+        feedback: this.transformFeedback(submission.feedback, 'listening'),
+      } as ListeningSubmission,
     };
   }
 
@@ -304,17 +338,22 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       data: {
         ...submission,
         content: this.transformContent(submission.content, 'speaking'),
-      },
+      } as SpeakingSubmission,
     };
   }
 
   async createSpeakingSubmission(
+    userId: string,
     dto: CreateSpeakingSubmissionDTO,
   ): Promise<SpeakingSubmissionResponse> {
     const submission = await this.prisma.lessonSubmission.create({
       data: {
-        ...dto,
-        content: dto.content as any,
+        lessonId: dto.lessonId,
+        userId: userId,
+        submissionType: 'speaking' as SkillType,
+        status: SubmissionStatus.completed,
+        tokensUsed: dto.tokensUsed,
+        content: serializeJSON(dto.content),
         submittedAt: new Date(),
       },
       ...this.submissionIncludeQuery,
@@ -324,48 +363,13 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       data: {
         ...submission,
         content: this.transformContent(submission.content, 'speaking'),
-      },
-    };
-  }
-
-  async updateSpeakingSubmission(
-    id: string,
-    dto: UpdateSpeakingSubmissionDTO,
-  ): Promise<SpeakingSubmissionResponse> {
-    const submission = await this.prisma.lessonSubmission.findFirst({
-      where: {
-        id,
-        submissionType: 'speaking' as SkillType,
-        ...notDeletedQuery,
-      },
-    });
-
-    if (!submission) {
-      throw new NotFoundException(
-        `Speaking submission with ID ${id} not found`,
-      );
-    }
-
-    const updatedSubmission = await this.prisma.lessonSubmission.update({
-      where: { id },
-      data: {
-        ...dto,
-        content: dto.content as any,
-      },
-      ...this.submissionIncludeQuery,
-    });
-
-    return {
-      data: {
-        ...updatedSubmission,
-        content: this.transformContent(updatedSubmission.content, 'speaking'),
-      },
+      } as SpeakingSubmission,
     };
   }
 
   async findOneWritingSubmission(
     id: string,
-  ): Promise<WritingSubmissionResponse> {
+  ): Promise<WritingSubmissionResultResponse> {
     const submission = await this.prisma.lessonSubmission.findFirst({
       where: {
         id,
@@ -379,36 +383,60 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       throw new NotFoundException(`Writing submission with ID ${id} not found`);
     }
 
-    return {
-      data: {
-        ...submission,
-        content: this.transformContent(submission.content, 'writing'),
+    const lesson = await this.prisma.lesson.findFirst({
+      where: {
+        id: submission.lessonId,
+        skill: SkillType.writing,
       },
+    });
+    const content = lesson?.content as unknown as ContentWritingDTO;
+    const exampleEssay = content.resources.sample_essay;
+
+    // Transform the submission to match WritingSubmission type
+    const transformedSubmission: WritingSubmission = {
+      ...submission,
+      content: this.transformContent(submission.content, 'writing'),
+      feedback: this.transformFeedback(submission.feedback, 'writing'),
+    } as WritingSubmission;
+
+    // Return the response with the correct structure
+    return {
+      data: transformedSubmission,
+      exampleEssay: exampleEssay as SampleEssayDTO & Prisma.JsonValue,
     };
   }
 
   async createWritingSubmission(
+    userId: string,
     dto: CreateWritingSubmissionDTO,
   ): Promise<WritingSubmissionResponse> {
     const submission = await this.prisma.lessonSubmission.create({
       data: {
-        ...dto,
-        content: dto.content as any,
+        lessonId: dto.lessonId,
+        userId: userId,
+        submissionType: 'writing' as SkillType,
+        status: SubmissionStatus.submitted,
+        tokensUsed: dto.tokensUsed,
+        content: serializeJSON(dto.content),
         submittedAt: new Date(),
       },
       ...this.submissionIncludeQuery,
     });
 
+    console.log(submission);
+
     return {
       data: {
         ...submission,
         content: this.transformContent(submission.content, 'writing'),
-      },
+        feedback: this.transformFeedback(submission.feedback, 'writing'),
+      } as WritingSubmission,
     };
   }
 
   async updateWritingSubmission(
     id: string,
+    userId: string,
     dto: UpdateWritingSubmissionDTO,
   ): Promise<WritingSubmissionResponse> {
     const submission = await this.prisma.lessonSubmission.findFirst({
@@ -427,54 +455,11 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       where: { id },
       data: {
         ...dto,
-        content: dto.content as any,
-      },
-      ...this.submissionIncludeQuery,
-    });
-
-    return {
-      data: {
-        ...updatedSubmission,
-        content: this.transformContent(updatedSubmission.content, 'writing'),
-      },
-    };
-  }
-
-  async updateWritingTeacherFeedback(
-    id: string,
-    dto: FeedbackDTO,
-    teacherId: string,
-  ): Promise<WritingSubmissionResponse> {
-    const submission = await this.prisma.lessonSubmission.findFirst({
-      where: {
-        id,
-        submissionType: 'writing' as SkillType,
-        ...notDeletedQuery,
-      },
-    });
-
-    if (!submission) {
-      throw new NotFoundException(`Writing submission with ID ${id} not found`);
-    }
-
-    const updatedSubmission = await this.prisma.lessonSubmission.update({
-      where: { id },
-      data: {
-        feedback: {
-          // Convert to JSON to store in Prisma JsonB field
-          value: JSON.stringify({
-            overall_score: dto.overall_score,
-            task_response: dto.task_response,
-            coherence_cohesion: dto.coherence_cohesion,
-            lexical_resource: dto.lexical_resource,
-            grammar: dto.grammar,
-            corrections: dto.corrections,
-            overall_feedback: dto.overall_feedback,
-          }),
-        },
+        content: dto.content ? serializeJSON(dto.content) : undefined,
+        feedback: dto.feedback ? serializeJSON(dto.feedback) : undefined,
         status: SubmissionStatus.scored,
         gradedAt: new Date(),
-        gradedById: teacherId,
+        gradedById: userId,
       },
       ...this.submissionIncludeQuery,
     });
@@ -483,7 +468,8 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       data: {
         ...updatedSubmission,
         content: this.transformContent(updatedSubmission.content, 'writing'),
-      },
+        feedback: this.transformFeedback(updatedSubmission.feedback, 'writing'),
+      } as WritingSubmission,
     };
   }
 }
