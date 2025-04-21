@@ -75,6 +75,11 @@ export class UserService implements UserServiceInterface {
       where: { id },
       ...this.userIncludeQuery,
     });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
     return { user: this.transformUserResponse(user) };
   }
 
