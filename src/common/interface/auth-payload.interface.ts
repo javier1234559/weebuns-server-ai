@@ -1,6 +1,6 @@
 export interface IAuthPayload {
   email: string;
-  sub: number;
+  sub: string;
   role: string;
   iat: number;
   exp: number;
