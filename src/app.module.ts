@@ -5,7 +5,6 @@ import { AiModule } from 'src/ai/ai.module';
 import { LessonModule } from 'src/models/lesson/lesson.module';
 import { CommentModule } from 'src/models/comment/comment.module';
 import { LessonSubmissionModule } from 'src/models/lesson-submission/lesson-submission.module';
-import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -16,7 +15,7 @@ import { AppController } from './app.controller';
     CommentModule,
     LessonSubmissionModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [],
 })
 export class AppModule {}
