@@ -22,6 +22,10 @@ class CorrectionDTO {
   @ApiProperty()
   @IsString()
   reason: string;
+
+  @ApiProperty()
+  @IsString()
+  position: string;
 }
 
 export class WritingFeedbackDTO {

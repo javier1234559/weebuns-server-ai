@@ -1,15 +1,22 @@
-import { Field, ObjectType } from '@nestjs/graphql';
 import { ApiProperty } from '@nestjs/swagger';
 import { PaginationOutputDto } from 'src/common/dto/pagination.dto';
-import { Vocabulary } from 'src/models/vocabulary/entities/vocabulary.entity';
+import { Vocabulary } from '../entities/vocabulary.entity';
 
-@ObjectType()
 export class VocabularyResponseDto {
-  @Field(() => [Vocabulary])
   @ApiProperty({ type: Vocabulary })
+  data: Vocabulary;
+}
+
+export class VocabulariesResponse {
+  @ApiProperty({ type: [Vocabulary] })
   data: Vocabulary[];
 
-  @Field(() => PaginationOutputDto)
-  @ApiProperty()
+  @ApiProperty({ type: PaginationOutputDto })
   pagination: PaginationOutputDto;
+}
+
+// Delete Response
+export class DeleteVocabularyResponse {
+  @ApiProperty()
+  message: string;
 }

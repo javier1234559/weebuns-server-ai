@@ -44,7 +44,6 @@ export class LessonSubmissionController {
   constructor(
     private readonly lessonSubmissionService: LessonSubmissionService,
   ) {}
-
   @Get()
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiResponse({ status: 200, type: LessonSubmissionsResponse })

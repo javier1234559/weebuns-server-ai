@@ -274,7 +274,8 @@ IMPORTANT: You must respond with ONLY a valid JSON object in the following forma
       "sentence": "the problematic sentence",
       "error": "the specific error",
       "suggestion": "the suggested correction",
-      "reason": "explanation of the error"
+      "reason": "explanation of the error",
+      "position": "the position of the error in the sentence"
     }
   ],
   "overall_feedback": "comprehensive feedback on the essay"
