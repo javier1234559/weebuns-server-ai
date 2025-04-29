@@ -6,6 +6,9 @@ import {
   createStudentProfiles,
   createLessons,
   createVocabularies,
+  createComments,
+  createNotifications,
+  createStudyActivities,
   generatedIds,
 } from './data';
 
@@ -112,6 +115,56 @@ async function seedVocabularies() {
   console.log(`Created ${generatedIds.vocabularies.length} vocabularies`);
 }
 
+async function seedComments() {
+  console.log('Seeding comments...');
+  const comments = createComments(generatedIds.users);
+  let parentCommentId: string | null = null;
+
+  for (const comment of comments) {
+    const createdComment = await prisma.comment.create({
+      data: {
+        ...comment,
+        parentId: comment.parentId === 'comment-1' ? parentCommentId : null,
+      },
+    });
+    generatedIds.comments.push(createdComment.id);
+
+    // Save the first comment's ID for the reply
+    if (!parentCommentId) {
+      parentCommentId = createdComment.id;
+    }
+  }
+  console.log(`Created ${generatedIds.comments.length} comments`);
+}
+
+async function seedNotifications() {
+  console.log('Seeding notifications...');
+  const notifications = createNotifications(generatedIds.users);
+
+  for (const notification of notifications) {
+    const createdNotification = await prisma.notification.create({
+      data: notification,
+    });
+    generatedIds.notifications.push(createdNotification.id);
+  }
+  console.log(`Created ${generatedIds.notifications.length} notifications`);
+}
+
+async function seedStudyActivities() {
+  console.log('Seeding study activities...');
+  const studyActivities = createStudyActivities(generatedIds.users);
+
+  for (const activity of studyActivities) {
+    const createdActivity = await prisma.studyActivity.create({
+      data: activity,
+    });
+    generatedIds.studyActivities.push(createdActivity.id);
+  }
+  console.log(
+    `Created ${generatedIds.studyActivities.length} study activities`,
+  );
+}
+
 // Main seed function
 async function seedAll() {
   try {
@@ -128,6 +181,11 @@ async function seedAll() {
     // Content
     await seedLessons();
     await seedVocabularies();
+
+    // User activities
+    await seedComments();
+    await seedNotifications();
+    await seedStudyActivities();
 
     console.log('Database seeded successfully');
     console.log('Generated IDs:', generatedIds);

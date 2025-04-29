@@ -5,6 +5,8 @@ import {
   SkillType,
   LessonType,
   Prisma,
+  NotificationType,
+  StudyActivity,
 } from '@prisma/client';
 
 export interface GeneratedIds {
@@ -21,6 +23,7 @@ export interface GeneratedIds {
   tokenTransactions: string[];
   referenceData: string[];
   discountCodes: string[];
+  studyActivities: string[];
 }
 
 export const generatedIds: GeneratedIds = {
@@ -37,6 +40,7 @@ export const generatedIds: GeneratedIds = {
   tokenTransactions: [],
   referenceData: [],
   discountCodes: [],
+  studyActivities: [],
 };
 
 export const REFERENCE_TYPES = {
@@ -316,7 +320,6 @@ export const createVocabularies = (userIds: string[]) => [
     imageUrl: 'https://example.com/image.jpg',
     referenceLink: 'https://example.com/reference',
     referenceName: 'Reference Name',
-    tags: ['academic', 'formal', 'IELTS'],
     repetitionLevel: 0,
     nextReview: new Date(),
     createdBy: {
@@ -327,31 +330,86 @@ export const createVocabularies = (userIds: string[]) => [
   },
 ];
 
-// export const comments: Prisma.CommentCreateInput[] = [
-//     {
-//         content: 'Great explanation! This really helped me understand the topic better.',
-//         entityId: 'lesson-1',
-//         user: {
-//             connect: {
-//                 username: 'test_user'
-//             }
-//         }
-//     }
-// ];
+export const createComments = (userIds: string[]) => [
+  {
+    identifierId: 'writing-all',
+    content: 'Bài viết này rất hữu ích, cảm ơn tác giả!',
+    userId: userIds[0],
+  },
+  {
+    identifierId: 'writing-all',
+    content: 'Tôi cũng thấy bài viết này rất hay!',
+    userId: userIds[0],
+    parentId: 'comment-1',
+  },
+];
 
-// export const notifications: Prisma.NotificationCreateInput[] = [
-//     {
-//         type: NotificationType.system,
-//         title: 'Welcome to Weebuns!',
-//         content: 'Welcome to our learning platform. Start your learning journey today!',
-//         isGlobal: true,
-//         createdBy: {
-//             connect: {
-//                 username: 'admin'
-//             }
-//         }
-//     }
-// ];
+export const createNotifications = (userIds: string[]) => [
+  // System notification
+  {
+    type: NotificationType.system,
+    title: 'Chào mừng đến với Weebuns!',
+    content:
+      'Chúng tôi rất vui được chào đón bạn đến với cộng đồng học tập của chúng tôi.',
+    thumbnailUrl: 'https://example.com/welcome.jpg',
+    isGlobal: true,
+    createdById: userIds[2], // Admin user
+  },
+  // Advertisement notification
+  {
+    type: NotificationType.advertisement,
+    title: 'Khóa học IELTS mới!',
+    content:
+      'Đăng ký ngay khóa học IELTS mới với ưu đãi 20% cho 100 người đầu tiên.',
+    thumbnailUrl: 'https://example.com/ielts-course.jpg',
+    actionUrl: '/courses/ielts',
+    isGlobal: true,
+    createdById: userIds[2],
+  },
+  // Submission notification
+  {
+    type: NotificationType.submission,
+    title: 'Bài tập của bạn đã được chấm điểm',
+    content: 'Giáo viên đã chấm điểm bài viết IELTS Writing Task 2 của bạn.',
+    thumbnailUrl: 'https://example.com/submission.jpg',
+    actionUrl: '/submissions/1',
+    userId: userIds[0],
+    createdById: userIds[1], // Teacher user
+  },
+  // Comment reply notification
+  {
+    type: NotificationType.comment_reply,
+    title: 'Ai đó đã trả lời bình luận của bạn',
+    content: 'Bạn đã nhận được một phản hồi cho bình luận của mình.',
+    thumbnailUrl: 'https://example.com/comment.jpg',
+    actionUrl: '/comments/1',
+    userId: userIds[0],
+    createdById: userIds[0],
+  },
+  // Comment mention notification
+  {
+    type: NotificationType.comment_mention,
+    title: 'Bạn đã được nhắc đến trong một bình luận',
+    content: '@Student One đã nhắc đến bạn trong một bình luận.',
+    thumbnailUrl: 'https://example.com/mention.jpg',
+    actionUrl: '/comments/2',
+    userId: userIds[0],
+    createdById: userIds[0],
+  },
+];
+
+export const createStudyActivities = (userIds: string[]) =>
+  [
+    {
+      userId: userIds[0],
+      date: new Date(),
+      reading: 1,
+      listening: 1,
+      writing: 1,
+      speaking: 1,
+      totalMinutes: 1,
+    },
+  ] as StudyActivity[];
 
 // export const featureTokenConfigs: Prisma.FeatureTokenConfigCreateInput[] = [
 //     {

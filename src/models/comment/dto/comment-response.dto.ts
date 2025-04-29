@@ -1,32 +1,105 @@
 import { ApiProperty } from '@nestjs/swagger';
-
 import { PaginationOutputDto } from 'src/common/dto/pagination.dto';
-import { Comment } from '../entities/comment.entity';
+import { ReactionType, UserRole } from '@prisma/client';
+
+export class CommentUserResponse {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  username: string;
+
+  @ApiProperty()
+  firstName: string;
+
+  @ApiProperty()
+  lastName: string;
+
+  @ApiProperty()
+  profilePicture: string;
+
+  @ApiProperty({
+    type: String,
+    enum: UserRole,
+  })
+  role: UserRole;
+}
 
 export class CommentResponse {
   @ApiProperty()
-  comment: Comment;
+  id: string;
+
+  @ApiProperty()
+  identifierId: string;
+
+  @ApiProperty()
+  userId: string;
+
+  @ApiProperty()
+  content: string;
+
+  @ApiProperty()
+  parentId: string | null;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+
+  @ApiProperty()
+  deletedAt: Date | null;
+
+  @ApiProperty()
+  lessonSubmissionId: string | null;
+
+  @ApiProperty({ type: CommentUserResponse })
+  user: CommentUserResponse;
+
+  @ApiProperty({ type: [Object] })
+  reactions: any[];
+
+  @ApiProperty({ type: Object })
+  _count: {
+    replies: number;
+  };
+
+  @ApiProperty()
+  likesCount: number;
+
+  @ApiProperty()
+  lovesCount: number;
+
+  @ApiProperty()
+  hasReplies: boolean;
+
+  @ApiProperty({
+    type: String,
+    enum: ReactionType,
+    nullable: true,
+  })
+  userReaction: ReactionType | null;
 }
 
 export class CommentsResponse {
-  @ApiProperty({ type: [Comment] })
-  comments: Comment[];
+  @ApiProperty({ type: [CommentResponse] })
+  data: CommentResponse[];
 
   @ApiProperty({ type: PaginationOutputDto })
   pagination: PaginationOutputDto;
 }
 
 export class CreateCommentResponse {
-  @ApiProperty({ type: Comment })
-  comment: Comment;
-}
-
-export class UpdateCommentResponse {
-  @ApiProperty({ type: Comment })
-  comment: Comment;
+  @ApiProperty({ type: CommentResponse })
+  comment: CommentResponse;
 }
 
 export class DeleteCommentResponse {
-  @ApiProperty({ type: Comment })
-  comment: Comment;
+  @ApiProperty()
+  message: string;
+}
+
+export class AddReactionResponse {
+  @ApiProperty()
+  message: string;
 }

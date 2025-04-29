@@ -159,6 +159,7 @@ model User {
   createdNotifications Notification[]       @relation("NotificationCreator")
   tokenTransactions    TokenTransaction[]
   VocabularyPractice   VocabularyPractice[]
+  StudyActivity        StudyActivity[]
 
   @@index([deletedAt, role])
   @@index([email])
@@ -265,7 +266,6 @@ model Vocabulary {
   imageUrl        String?   @map("image_url")
   referenceLink   String?   @map("reference_link")
   referenceName   String?   @map("reference_name")
-  tags            String[]
   repetitionLevel Int       @default(0) @map("repetition_level")
   nextReview      DateTime? @map("next_review")
   createdById     String    @map("created_by") @db.Uuid
@@ -300,7 +300,7 @@ model VocabularyPractice {
 
 model Comment {
   id           String    @id @default(uuid()) @db.Uuid
-  submissionId String    @map("submission_id") @db.Uuid
+  identifierId String    @map("identifier_id")
   userId       String    @map("user_id") @db.Uuid
   content      String
   parentId     String?   @map("parent_id") @db.Uuid
@@ -309,13 +309,14 @@ model Comment {
   deletedAt    DateTime? @map("deleted_at")
 
   // Relations
-  submission LessonSubmission  @relation(fields: [submissionId], references: [id])
-  user       User              @relation(fields: [userId], references: [id])
-  parent     Comment?          @relation("CommentReplies", fields: [parentId], references: [id])
-  replies    Comment[]         @relation("CommentReplies")
-  reactions  CommentReaction[]
+  user               User              @relation(fields: [userId], references: [id])
+  parent             Comment?          @relation("CommentReplies", fields: [parentId], references: [id])
+  replies            Comment[]         @relation("CommentReplies")
+  reactions          CommentReaction[]
+  LessonSubmission   LessonSubmission? @relation(fields: [lessonSubmissionId], references: [id])
+  lessonSubmissionId String?           @db.Uuid
 
-  @@index([submissionId])
+  @@index([identifierId])
   @@index([userId])
   @@index([parentId])
 }
@@ -408,4 +409,23 @@ model FeatureTokenConfig {
   updatedAt    DateTime    @updatedAt @map("updated_at")
 
   @@map("feature_token_config")
+}
+
+model StudyActivity {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  date         DateTime @map("activity_date")
+  reading      Int      @default(0)
+  listening    Int      @default(0)
+  writing      Int      @default(0)
+  speaking     Int      @default(0)
+  totalMinutes Int      @default(0) @map("total_minutes")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("study_activity")
 }

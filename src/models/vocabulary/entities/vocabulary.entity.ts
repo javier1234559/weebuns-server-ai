@@ -38,11 +38,6 @@ export class Vocabulary implements IVocabulary {
   })
   referenceName: string | null;
   @ApiProperty({
-    type: 'string',
-    isArray: true,
-  })
-  tags: string[];
-  @ApiProperty({
     type: 'integer',
     format: 'int32',
   })
