@@ -6,6 +6,8 @@ import { LessonModule } from 'src/models/lesson/lesson.module';
 import { CommentModule } from 'src/models/comment/comment.module';
 import { LessonSubmissionModule } from 'src/models/lesson-submission/lesson-submission.module';
 import { VocabularyModule } from 'src/models/vocabulary/vocabulary.module';
+import { TokenModule } from 'src/models/token/token.module';
+import { PaymentModule } from 'src/models/payment/payment.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { VocabularyModule } from 'src/models/vocabulary/vocabulary.module';
     CommentModule,
     LessonSubmissionModule,
     VocabularyModule,
+    PaymentModule,
+    TokenModule,
   ],
   controllers: [],
   providers: [],

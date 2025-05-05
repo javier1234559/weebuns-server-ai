@@ -1,3 +1,3 @@
-import { Comment as PrismaComment } from '@prisma/client';
+import { CommentReaction as PrismaCommentReaction } from '@prisma/client';
 
-export interface IComment extends PrismaComment {}
+export interface ICommentReaction extends PrismaCommentReaction {}

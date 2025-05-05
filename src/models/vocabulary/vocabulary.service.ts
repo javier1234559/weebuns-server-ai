@@ -89,11 +89,10 @@ export class VocabularyService {
     query: FindAllVocabularyQuery,
     user: IAuthPayload,
   ): Promise<VocabulariesResponse> {
-    const { page, perPage, search, tags, repetitionLevel, dueDate } = query;
+    const { page, perPage, search, repetitionLevel, dueDate } = query;
 
     const queryOptions = {
       where: {
-        ...(tags && tags.length > 0 && { tags: { hasSome: tags } }),
         ...(search && {
           term: {
             contains: search,

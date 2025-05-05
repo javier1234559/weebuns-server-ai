@@ -59,3 +59,8 @@ export enum PaymentStatus {
   SUCCESS = 'SUCCESS',
   FAILED = 'FAILED',
 }
+
+export enum TransactionType {
+  TOKEN_PURCHASE = 'token_purchase',
+  TOKEN_USE = 'token_use',
+}

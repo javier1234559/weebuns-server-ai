@@ -10,6 +10,9 @@ import {
   createNotifications,
   createStudyActivities,
   generatedIds,
+  tokenPackages,
+  createTokenWallet,
+  createTransaction,
 } from './data';
 
 const prisma = new PrismaClient();
@@ -165,6 +168,43 @@ async function seedStudyActivities() {
   );
 }
 
+async function seedTokenPackages() {
+  console.log('Seeding token packages...');
+  for (const packageData of tokenPackages) {
+    const tokenPackage = await prisma.tokenPackage.create({
+      data: packageData,
+    });
+    generatedIds.tokenPackages.push(tokenPackage.id);
+  }
+  console.log(`Created ${generatedIds.tokenPackages.length} token packages`);
+}
+
+async function seedTokenWallet() {
+  console.log('Seeding token wallet...');
+  const tokenWallet = await prisma.tokenWallet.create({
+    data: createTokenWallet(generatedIds.users),
+  });
+  generatedIds.tokenWallets.push(tokenWallet.id);
+  console.log('Created token wallet');
+}
+
+async function seedTransaction() {
+  console.log('Seeding transaction...');
+  const standardPackage = await prisma.tokenPackage.findUnique({
+    where: { code: 'standard' },
+  });
+
+  if (!standardPackage) {
+    throw new Error('Standard package not found');
+  }
+
+  const transaction = await prisma.transaction.create({
+    data: createTransaction(generatedIds.users, standardPackage.id),
+  });
+  generatedIds.transactions.push(transaction.id);
+  console.log('Created transaction');
+}
+
 // Main seed function
 async function seedAll() {
   try {
@@ -186,6 +226,11 @@ async function seedAll() {
     await seedComments();
     await seedNotifications();
     await seedStudyActivities();
+
+    // Token system
+    await seedTokenPackages();
+    await seedTransaction();
+    await seedTokenWallet();
 
     console.log('Database seeded successfully');
     console.log('Generated IDs:', generatedIds);

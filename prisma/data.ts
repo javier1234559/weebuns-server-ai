@@ -7,6 +7,8 @@ import {
   Prisma,
   NotificationType,
   StudyActivity,
+  PaymentType,
+  PaymentStatus,
 } from '@prisma/client';
 
 export interface GeneratedIds {
@@ -24,6 +26,9 @@ export interface GeneratedIds {
   referenceData: string[];
   discountCodes: string[];
   studyActivities: string[];
+  tokenPackages: string[];
+  tokenWallets: string[];
+  transactions: string[];
 }
 
 export const generatedIds: GeneratedIds = {
@@ -41,6 +46,9 @@ export const generatedIds: GeneratedIds = {
   referenceData: [],
   discountCodes: [],
   studyActivities: [],
+  tokenPackages: [],
+  tokenWallets: [],
+  transactions: [],
 };
 
 export const REFERENCE_TYPES = {
@@ -177,7 +185,6 @@ export const createStudentProfiles = (userIds: string[]) => [
     targetWriting: 6.5,
     targetSpeaking: 6.5,
     nextExamDate: new Date('2024-12-31'),
-    tokensBalance: 100,
   },
 ];
 
@@ -410,6 +417,56 @@ export const createStudyActivities = (userIds: string[]) =>
       totalMinutes: 1,
     },
   ] as StudyActivity[];
+
+export const tokenPackages: Prisma.TokenPackageCreateInput[] = [
+  {
+    code: 'small',
+    name: 'Gói Nhỏ',
+    tokens: 20,
+    price: 25000,
+    pricePerToken: 1250,
+    oldPricePerToken: 1500,
+    message: 'Phù hợp dùng thử',
+    popular: false,
+  },
+  {
+    code: 'standard',
+    name: 'Gói Tiêu Chuẩn',
+    tokens: 100,
+    price: 100000,
+    pricePerToken: 1000,
+    oldPricePerToken: 1250,
+    message: 'Phổ biến',
+    popular: true,
+  },
+  {
+    code: 'savings',
+    name: 'Gói Tiết Kiệm',
+    tokens: 300,
+    price: 250000,
+    pricePerToken: 833,
+    oldPricePerToken: 1000,
+    message: 'Tiết kiệm nhất',
+    popular: false,
+  },
+];
+
+export const createTokenWallet = (userIds: string[]) => ({
+  userId: userIds[0], // test_user
+  balance: 10,
+});
+
+export const createTransaction = (userIds: string[], packageId: string) => ({
+  userId: userIds[0], // test_user
+  packageId: packageId, // This should be a UUID
+  amount: 100000,
+  tokenAmount: 100,
+  paymentType: PaymentType.bank,
+  transactionId: 'test-transaction-1',
+  status: PaymentStatus.completed,
+  paymentDate: new Date(),
+  type: 'token_purchase',
+});
 
 // export const featureTokenConfigs: Prisma.FeatureTokenConfigCreateInput[] = [
 //     {

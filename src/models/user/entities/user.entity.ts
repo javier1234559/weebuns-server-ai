@@ -116,11 +116,6 @@ export class StudentProfileEntity implements StudentProfile {
   nextExamDate: Date | null;
 
   @ApiProperty({
-    type: 'number',
-  })
-  tokensBalance: number;
-
-  @ApiProperty({
     type: 'string',
     format: 'date-time',
   })

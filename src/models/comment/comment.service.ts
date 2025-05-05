@@ -162,6 +162,7 @@ export class CommentService implements ICommentService {
     }
 
     // Check if user already has a reaction of this type
+    console.log('test' + userId);
     const existingReaction = await this.prisma.commentReaction.findFirst({
       where: {
         commentId,

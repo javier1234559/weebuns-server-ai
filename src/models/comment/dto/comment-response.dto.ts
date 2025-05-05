@@ -25,6 +25,20 @@ export class CommentUserResponse {
   role: UserRole;
 }
 
+export class CommentReactionResponse {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  userId: string;
+
+  @ApiProperty({ enum: ReactionType })
+  type: ReactionType;
+
+  @ApiProperty()
+  createdAt: Date;
+}
+
 export class CommentResponse {
   @ApiProperty()
   id: string;
@@ -56,8 +70,8 @@ export class CommentResponse {
   @ApiProperty({ type: CommentUserResponse })
   user: CommentUserResponse;
 
-  @ApiProperty({ type: [Object] })
-  reactions: any[];
+  @ApiProperty({ type: [CommentReactionResponse] })
+  reactions: CommentReactionResponse[];
 
   @ApiProperty({ type: Object })
   _count: {

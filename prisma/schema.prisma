@@ -56,6 +56,7 @@ enum PaymentType {
   bank
   momo
   zalopay
+  internal
 }
 
 enum PaymentStatus {
@@ -95,20 +96,6 @@ enum NotificationType {
 enum ReactionType {
   like
   teacher_heart
-}
-
-enum TokenTransactionType {
-  purchase
-  submission_fee
-  ai_chat_fee
-  upgrade_suggestion_fee
-  reward
-}
-
-enum FeatureCode {
-  submission
-  ai_chat
-  upgrade_suggestion
 }
 
 // Models
@@ -157,9 +144,10 @@ model User {
   reactions            CommentReaction[]
   notifications        Notification[]       @relation("UserNotifications")
   createdNotifications Notification[]       @relation("NotificationCreator")
-  tokenTransactions    TokenTransaction[]
   VocabularyPractice   VocabularyPractice[]
   StudyActivity        StudyActivity[]
+  TokenWallet          TokenWallet?
+  Transaction          Transaction[]
 
   @@index([deletedAt, role])
   @@index([email])
@@ -191,7 +179,6 @@ model StudentProfile {
   targetWriting       Float?    @map("target_writing")
   targetSpeaking      Float?    @map("target_speaking")
   nextExamDate        DateTime? @map("next_exam_date")
-  tokensBalance       Int       @default(0) @map("tokens_balance")
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
   deletedAt           DateTime? @map("deleted_at")
@@ -358,57 +345,62 @@ model Notification {
   @@map("notification")
 }
 
-model TokenTransaction {
-  id            String               @id @default(uuid()) @db.Uuid
-  userId        String               @map("user_id") @db.Uuid
-  amount        Int
-  type          TokenTransactionType
-  paymentMethod PaymentType?         @map("payment_method")
-  status        PaymentStatus
-  transactionId String?              @map("transaction_id")
-  discountCode  String?              @map("discount_code")
-  finalAmount   Int                  @map("final_amount")
-  createdAt     DateTime             @default(now()) @map("created_at")
+model TokenWallet {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @unique @map("user_id") @db.Uuid
+  balance   Int       @default(0)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
-  user     User          @relation(fields: [userId], references: [id], onDelete: NoAction)
-  discount DiscountCode? @relation(fields: [discountCode], references: [code])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([deletedAt])
+  @@map("token_wallet")
+}
+
+model TokenPackage {
+  id               String   @id @default(uuid()) @db.Uuid
+  code             String   @unique // small, standard, savings
+  name             String
+  tokens           Int
+  price            Int      @map("price_vnd")
+  pricePerToken    Int      @map("price_per_token")
+  oldPricePerToken Int?     @map("old_price_per_token")
+  message          String?
+  popular          Boolean  @default(false)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  transactions Transaction[]
+
+  @@map("token_package")
+}
+
+model Transaction {
+  id            String        @id @default(uuid()) @db.Uuid
+  userId        String        @map("user_id") @db.Uuid
+  packageId     String?       @map("package_id") @db.Uuid
+  amount        Int           @map("amount_vnd")
+  tokenAmount   Int           @map("token_amount")
+  paymentType   PaymentType
+  transactionId String        @unique @map("transaction_id")
+  status        PaymentStatus
+  paymentDate   DateTime      @map("payment_date")
+  currency      String        @default("VND")
+  type          String        @map("transaction_type") // "token_purchase" | "token_use"
+  reason        String?       @map("reason")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  package TokenPackage? @relation(fields: [packageId], references: [id])
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
   @@index([type])
-  @@map("token_transaction")
-}
-
-model DiscountCode {
-  id           String   @id @default(uuid()) @db.Uuid
-  code         String   @unique
-  amount       Int
-  value        Float
-  isPercentage Boolean  @default(false) @map("is_percentage")
-  usageLimit   Int      @map("usage_limit")
-  currentUsage Int      @default(0) @map("current_usage")
-  startDate    DateTime @map("start_date")
-  endDate      DateTime @map("end_date")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
-  transactions TokenTransaction[]
-
-  @@index([code])
-  @@map("discount_code")
-}
-
-model FeatureTokenConfig {
-  id           String      @id @default(uuid()) @db.Uuid
-  featureCode  FeatureCode @unique @map("feature_code")
-  tokenCost    Int         @map("token_cost")
-  isPercentage Boolean     @default(false) @map("is_percentage")
-  description  String?
-  isActive     Boolean     @default(true) @map("is_active")
-  createdAt    DateTime    @default(now()) @map("created_at")
-  updatedAt    DateTime    @updatedAt @map("updated_at")
-
-  @@map("feature_token_config")
+  @@index([paymentDate])
+  @@map("transaction")
 }
 
 model StudyActivity {

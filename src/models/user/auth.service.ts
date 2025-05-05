@@ -104,7 +104,6 @@ export class AuthService implements AuthServiceInterface {
         await this.prisma.studentProfile.create({
           data: {
             userId: user.id,
-            tokensBalance: 0,
           },
         });
       }

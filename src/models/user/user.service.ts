@@ -311,7 +311,6 @@ export class UserService implements UserServiceInterface {
                 targetWriting,
                 targetSpeaking,
                 nextExamDate,
-                tokensBalance: 0,
               },
             },
       },

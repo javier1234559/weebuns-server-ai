@@ -42,11 +42,6 @@ export class CreateVocabularyDto {
   @IsString()
   referenceName?: string;
 
-  @ApiProperty({ type: [String] })
-  @IsArray()
-  @IsString({ each: true })
-  tags: string[];
-
   @ApiPropertyOptional({
     type: 'number',
     example: 1,
@@ -97,12 +92,6 @@ export class UpdateVocabularyDto {
   @IsString()
   referenceName?: string;
 
-  @ApiPropertyOptional({ type: [String] })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  tags?: string[];
-
   @ApiPropertyOptional({
     type: 'number',
     example: 1,
@@ -138,23 +127,6 @@ export class UpdateVocabularyReviewDto {
 export class VocabularyFilterDto {
   @ApiProperty({
     type: 'string',
-    isArray: true,
-    required: false,
-    description: 'Filter vocabularies by tags',
-  })
-  @IsOptional()
-  @IsArray()
-  @Transform(({ value }) => {
-    // Transform string to array if needed
-    if (typeof value === 'string') {
-      return value.split(',').map((tag) => tag.trim());
-    }
-    return value;
-  })
-  tags?: string[];
-
-  @ApiProperty({
-    type: 'string',
     required: false,
     description: 'Search vocabularies by term',
   })
@@ -168,17 +140,6 @@ export class FindAllVocabularyQuery extends PaginationInputDto {
   @IsOptional()
   @IsString()
   search?: string;
-
-  @ApiPropertyOptional({ type: [String] })
-  @IsOptional()
-  @IsArray()
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      return value.split(',').map((tag) => tag.trim());
-    }
-    return value;
-  })
-  tags?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()
