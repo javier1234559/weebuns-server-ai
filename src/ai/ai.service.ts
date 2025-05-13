@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject } from '@nestjs/common';
+import { Cache } from 'cache-manager';
 import { v4 as uuidv4 } from 'uuid';
-
 import Groq from 'groq-sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
 import { CheckGrammarResponseDto } from './dto/check-grammar-response.dto';
 import { CheckGrammarDto } from './dto/check-grammar.dto';
 import {
@@ -19,18 +20,33 @@ import { TranslateDto } from './dto/translate.dto';
 import { EvaluateEssayDto } from './dto/evaluate-essay.dto';
 import { EvaluateEssayResponseDto } from './dto/evaluate-essay-response.dto';
 import { AiServiceInterface } from './interface/ai.service.interface';
+import {
+  RecommendAnswerDto,
+  SpeakingDto,
+  StartSpeakingDto,
+} from './dto/ai-request';
+import {
+  StartSpeakingResponseDto,
+  ChatSessionData,
+  RecommendAnswerResponseDto,
+  CheckSessionResponseDto,
+} from './dto/ai-response';
 
 @Injectable()
 export class AiService implements AiServiceInterface {
   private groq: Groq;
   private readonly modelName = 'llama3-8b-8192';
-  private readonly geminiModelName = 'gemini-1.5-flash';
+  private readonly geminiModelName = 'gemini-2.0-flash';
   private geminiModel: any;
+  private readonly CACHE_TTL = 30 * 60; // 30 minutes in seconds
+  private readonly MAX_HISTORY_LENGTH = 10; // Maximum number of messages to keep in history
+  private readonly MAX_MESSAGES = 50; // Maximum number of messages before forcing a new session
 
-  // In-memory storage for chat sessions
-  private chatSessions: Map<string, any> = new Map();
-
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {
+    // Initialize Groq
     this.groq = new Groq({
       apiKey: this.configService.get<string>('AI_API_KEY'),
     });
@@ -45,6 +61,41 @@ export class AiService implements AiServiceInterface {
         model: this.geminiModelName,
       });
     }
+  }
+
+  private buildSpeakingSystemPrompt(dto: StartSpeakingDto): string {
+    return `
+${dto.promptText ? dto.promptText.trim() : ''}
+${dto.topicText ? `\nTopic: "${dto.topicText.trim()}"` : ''}
+${dto.followupExamples?.length ? '\nAsk follow-up questions like:\n' + dto.followupExamples.map((q) => `- ${q}`).join('\n') : ''}
+${dto.backgroundKnowledge ? `\nBackground knowledge to consider: ${dto.backgroundKnowledge.trim()}` : ''}
+`.trim();
+  }
+
+  private async updateSpeakingSessionData(
+    sessionId: string,
+    data: ChatSessionData,
+  ): Promise<void> {
+    await this.cacheManager.set(
+      `speaking:${sessionId}`,
+      data,
+      this.CACHE_TTL * 1000,
+    );
+  }
+
+  private async getSpeakingSessionData(
+    sessionId: string,
+  ): Promise<ChatSessionData | null> {
+    return this.cacheManager.get<ChatSessionData>(`speaking:${sessionId}`);
+  }
+
+  async checkSession(sessionId: string): Promise<CheckSessionResponseDto> {
+    const sessionData = await this.cacheManager.get<ChatSessionData>(
+      `chat:${sessionId}`,
+    );
+    return {
+      status: !!sessionData,
+    };
   }
 
   async translate(dto: TranslateDto): Promise<TranslateResponseDto> {
@@ -160,20 +211,33 @@ Required format:
   async chat(dto: ChatRequestDto): Promise<ChatResponseDto> {
     try {
       if (!this.geminiModel) {
-        throw new Error(
-          'Gemini model is not initialized. Please check your GEMINI_API_KEY configuration.',
-        );
+        throw new Error('Gemini model is not initialized.');
       }
 
-      // Get or create chat session
       let sessionId = dto.sessionId || '';
       let chatSession;
 
-      if (sessionId && this.chatSessions.has(sessionId)) {
-        chatSession = this.chatSessions.get(sessionId);
-      } else {
+      if (sessionId) {
+        const sessionData = await this.cacheManager.get<ChatSessionData>(
+          `chat:${sessionId}`,
+        );
+        if (sessionData) {
+          const chatConfig: any = {
+            generationConfig: {
+              maxOutputTokens: 2048,
+              temperature: 0.7,
+            },
+            history: sessionData.history.map((msg) => ({
+              role: msg.role,
+              parts: [{ text: msg.content }],
+            })),
+          };
+          chatSession = this.geminiModel.startChat(chatConfig);
+        }
+      }
+
+      if (!chatSession) {
         sessionId = uuidv4();
-        // Start a new chat session with system prompt if provided
         const chatConfig: any = {
           generationConfig: {
             maxOutputTokens: 2048,
@@ -181,56 +245,41 @@ Required format:
           },
         };
 
-        // Add system prompt to history if provided
         if (dto.systemPrompt) {
           chatConfig.history = [
             {
               role: 'user',
-              parts: [
-                {
-                  text: dto.systemPrompt,
-                },
-              ],
+              parts: [{ text: dto.systemPrompt }],
             },
           ];
         }
 
         chatSession = this.geminiModel.startChat(chatConfig);
-        this.chatSessions.set(sessionId, chatSession);
       }
 
-      // Send message and get response
       const result = await chatSession.sendMessage(dto.message);
-      console.log('------');
-      console.log(JSON.stringify(chatSession, null, 2));
-      console.log(JSON.stringify(result, null, 2));
       const response = await result.response;
-      let assistantMessage = response.text();
+      const assistantMessage = response.text();
 
-      // Try to parse the response as JSON
-      let parsedResponse;
-      try {
-        parsedResponse = JSON.parse(assistantMessage);
-        // If successful, use the response field as the message
-        if (parsedResponse && parsedResponse.response) {
-          assistantMessage = parsedResponse.response;
-        }
-      } catch (error) {
-        // If parsing fails, use the original message
-        console.log(
-          'Failed to parse response as JSON, using original message:',
-          error.message,
-        );
-      }
-
-      // Get chat history
+      // Store history with our internal format (using 'assistant' role)
       const history = await chatSession.getHistory();
-
-      // Convert history to our format
       const formattedHistory: ChatMessageDto[] = history.map((msg: any) => ({
         role: msg.role,
         content: msg.parts[0].text,
       }));
+
+      // Store session in cache
+      const sessionData: ChatSessionData = {
+        systemPrompt: dto.systemPrompt || '',
+        history: formattedHistory,
+        lastActive: Date.now(),
+        messageCount: formattedHistory.length / 2,
+      };
+      await this.cacheManager.set(
+        `chat:${sessionId}`,
+        sessionData,
+        this.CACHE_TTL * 1000,
+      );
 
       return {
         message: assistantMessage,
@@ -240,6 +289,85 @@ Required format:
     } catch (error) {
       throw new NotFoundException(`Chat failed: ${error.message}`);
     }
+  }
+
+  async *chatStreaming(dto: ChatRequestDto): AsyncGenerator<string> {
+    if (!this.geminiModel) {
+      throw new Error('Gemini model is not initialized.');
+    }
+
+    let sessionId = dto.sessionId || '';
+    let chatSession;
+
+    if (sessionId) {
+      const sessionData = await this.cacheManager.get<ChatSessionData>(
+        `chat:${sessionId}`,
+      );
+      if (sessionData) {
+        const chatConfig: any = {
+          generationConfig: {
+            maxOutputTokens: 2048,
+            temperature: 0.7,
+          },
+          history: sessionData.history.map((msg) => ({
+            role: msg.role,
+            parts: [{ text: msg.content }],
+          })),
+        };
+        chatSession = this.geminiModel.startChat(chatConfig);
+      }
+    }
+
+    if (!chatSession) {
+      sessionId = uuidv4();
+      const chatConfig: any = {
+        generationConfig: {
+          maxOutputTokens: 2048,
+          temperature: 0.7,
+        },
+      };
+
+      if (dto.systemPrompt) {
+        chatConfig.history = [
+          {
+            role: 'user',
+            parts: [{ text: dto.systemPrompt }],
+          },
+        ];
+      }
+
+      chatSession = this.geminiModel.startChat(chatConfig);
+    }
+
+    const result = await chatSession.sendMessage(dto.message);
+    const response = await result.response;
+    const assistantMessage = response.text();
+
+    // Split assistantMessage into chunks (e.g., 100 characters each)
+    const chunks = assistantMessage.match(/.{1,100}/g) || [];
+    for (const chunk of chunks) {
+      yield chunk;
+    }
+
+    // Store history with our internal format (using 'assistant' role)
+    const history = await chatSession.getHistory();
+    const formattedHistory: ChatMessageDto[] = history.map((msg: any) => ({
+      role: msg.role,
+      content: msg.parts[0].text,
+    }));
+
+    // Store session in cache
+    const sessionData: ChatSessionData = {
+      systemPrompt: dto.systemPrompt || '',
+      history: formattedHistory,
+      lastActive: Date.now(),
+      messageCount: formattedHistory.length / 2,
+    };
+    await this.cacheManager.set(
+      `chat:${sessionId}`,
+      sessionData,
+      this.CACHE_TTL * 1000,
+    );
   }
 
   async evaluateEssay(
@@ -382,5 +510,241 @@ DO NOT include any explanatory text outside the JSON structure. The response mus
       console.error('Error evaluating essay:', error);
       throw error;
     }
+  }
+
+  async startSpeaking(
+    dto: StartSpeakingDto,
+  ): Promise<StartSpeakingResponseDto> {
+    try {
+      if (!this.geminiModel) {
+        throw new Error('Gemini model is not initialized.');
+      }
+
+      const sessionId = uuidv4();
+      const systemPrompt = this.buildSpeakingSystemPrompt(dto);
+      const sessionData: ChatSessionData = {
+        systemPrompt,
+        history: [],
+        lastActive: Date.now(),
+        messageCount: 0,
+      };
+
+      await this.updateSpeakingSessionData(sessionId, sessionData);
+
+      return {
+        sessionId,
+        topicText: dto.topicText,
+      };
+    } catch (error) {
+      throw new NotFoundException(
+        `Failed to start speaking session: ${error.message}`,
+      );
+    }
+  }
+
+  async chatSpeaking(dto: SpeakingDto): Promise<ChatResponseDto> {
+    try {
+      if (!this.geminiModel) {
+        throw new Error('Gemini model is not initialized.');
+      }
+
+      // Get session data from cache
+      const sessionData = await this.getSpeakingSessionData(dto.sessionId);
+      if (!sessionData) {
+        throw new NotFoundException('Session not found or expired');
+      }
+
+      // Check if we need to force a new session
+      if (sessionData.messageCount >= this.MAX_MESSAGES) {
+        throw new NotFoundException(
+          'Session has reached maximum message limit. Please start a new session.',
+        );
+      }
+
+      // Create chat config with system prompt and recent history
+      const chatConfig: any = {
+        generationConfig: {
+          maxOutputTokens: 2048,
+          temperature: 0.7,
+        },
+        history: [
+          {
+            role: 'user',
+            parts: [{ text: sessionData.systemPrompt }],
+          },
+          // Add recent history (last N messages) with role conversion
+          ...sessionData.history.slice(-this.MAX_HISTORY_LENGTH).map((msg) => ({
+            role: msg.role === 'assistant' ? 'model' : msg.role,
+            parts: [{ text: msg.content }],
+          })),
+        ],
+      };
+
+      const chatSession = this.geminiModel.startChat(chatConfig);
+      const result = await chatSession.sendMessage(dto.message);
+      const response = await result.response;
+      const assistantMessage = response.text();
+
+      // Store history with our internal format (using 'assistant' role)
+      sessionData.history.push(
+        { role: 'user', content: dto.message },
+        { role: 'assistant', content: assistantMessage },
+      );
+      sessionData.lastActive = Date.now();
+      sessionData.messageCount += 1;
+
+      // Keep only recent history
+      if (sessionData.history.length > this.MAX_HISTORY_LENGTH * 2) {
+        sessionData.history = sessionData.history.slice(
+          -this.MAX_HISTORY_LENGTH * 2,
+        );
+      }
+
+      await this.updateSpeakingSessionData(dto.sessionId, sessionData);
+
+      return {
+        message: assistantMessage,
+        sessionId: dto.sessionId,
+        history: sessionData.history,
+      };
+    } catch (error) {
+      throw new NotFoundException(`Chat failed: ${error.message}`);
+    }
+  }
+
+  async recommendAnswer(
+    dto: RecommendAnswerDto,
+  ): Promise<RecommendAnswerResponseDto> {
+    try {
+      console.log(dto);
+
+      if (!this.geminiModel) {
+        throw new Error('Gemini model is not initialized.');
+      }
+
+      const sessionData = await this.getSpeakingSessionData(dto.sessionId);
+      if (!sessionData) {
+        throw new NotFoundException('Session not found or expired');
+      }
+
+      const chatConfig: any = {
+        generationConfig: {
+          maxOutputTokens: 2048,
+          temperature: 0.7,
+        },
+        history: [
+          {
+            role: 'user',
+            parts: [{ text: sessionData.systemPrompt }],
+          },
+          ...sessionData.history.slice(-this.MAX_HISTORY_LENGTH).map((msg) => ({
+            role: msg.role === 'assistant' ? 'model' : msg.role,
+            parts: [{ text: msg.content }],
+          })),
+        ],
+      };
+
+      const chatSession = this.geminiModel.startChat(chatConfig);
+
+      const prompt = `You are a JSON API recommend answer for user. Return ONLY a JSON array with exactly 3 strings. No markdown, no code blocks, no additional text.
+  Example: ["response1", "response2", "response3"]`;
+
+      const result = await chatSession.sendMessage(prompt);
+      const response = await result.response;
+
+      const rawText = response.text();
+
+      // Xử lý chuỗi trả về: xóa ```json hoặc ``` nếu có
+      const cleanedText = rawText
+        .replace(/```json\n?/gi, '')
+        .replace(/```/g, '')
+        .trim();
+
+      let parsed: string[];
+      try {
+        parsed = JSON.parse(cleanedText);
+      } catch (err: any) {
+        console.log(err);
+        throw new Error('Failed to parse JSON from Gemini output');
+      }
+
+      if (
+        !Array.isArray(parsed) ||
+        parsed.length !== 3 ||
+        !parsed.every((item) => typeof item === 'string')
+      ) {
+        throw new Error('AI response is not a valid array of 3 strings');
+      }
+
+      return {
+        suggestedResponses: parsed,
+        sessionId: dto.sessionId,
+      };
+    } catch (error) {
+      throw new NotFoundException(
+        `Failed to recommend answers: ${error.message}`,
+      );
+    }
+  }
+
+  async *chatSpeakingStreaming(dto: SpeakingDto): AsyncGenerator<string> {
+    if (!this.geminiModel) {
+      throw new Error('Gemini model is not initialized.');
+    }
+
+    // Lấy session data như cũ
+    const sessionData = await this.getSpeakingSessionData(dto.sessionId);
+    if (!sessionData) {
+      throw new NotFoundException('Session not found or expired');
+    }
+    if (sessionData.messageCount >= this.MAX_MESSAGES) {
+      throw new NotFoundException(
+        'Session has reached maximum message limit. Please start a new session.',
+      );
+    }
+
+    // Tạo chat config như cũ
+    const chatConfig: any = {
+      generationConfig: {
+        maxOutputTokens: 2048,
+        temperature: 0.7,
+      },
+      history: [
+        {
+          role: 'user',
+          parts: [{ text: sessionData.systemPrompt }],
+        },
+        ...sessionData.history.slice(-this.MAX_HISTORY_LENGTH).map((msg) => ({
+          role: msg.role === 'assistant' ? 'model' : msg.role,
+          parts: [{ text: msg.content }],
+        })),
+      ],
+    };
+
+    const chatSession = this.geminiModel.startChat(chatConfig);
+    const result = await chatSession.sendMessage(dto.message);
+    const response = await result.response;
+    const assistantMessage = response.text();
+    console.log('Test:', assistantMessage);
+
+    // Chia nhỏ assistantMessage thành các chunk (ví dụ 100 ký tự)
+    const chunks = assistantMessage.match(/.{1,100}/g) || [];
+    for (const chunk of chunks) {
+      yield chunk;
+    }
+
+    // Cập nhật session như cũ
+    sessionData.history.push(
+      { role: 'user', content: dto.message },
+      { role: 'assistant', content: assistantMessage },
+    );
+    sessionData.lastActive = Date.now();
+    sessionData.messageCount += 1;
+    if (sessionData.history.length > this.MAX_HISTORY_LENGTH * 2) {
+      sessionData.history = sessionData.history.slice(
+        -this.MAX_HISTORY_LENGTH * 2,
+      );
+    }
+    await this.updateSpeakingSessionData(dto.sessionId, sessionData);
   }
 }

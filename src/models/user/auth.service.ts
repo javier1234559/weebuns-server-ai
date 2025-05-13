@@ -28,6 +28,7 @@ import {
 } from 'src/models/user/dto/auth-request.dto';
 import {
   LogoutResponse,
+  UserDto,
   UserLoginResponse,
   UserRefreshTokenResponse,
   UserRegisterResponse,
@@ -49,6 +50,12 @@ export class AuthService implements AuthServiceInterface {
     teacherProfile: true,
   };
 
+  private transformUserResponse(user: any): UserDto {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
   async validateUser(email: string, password: string): Promise<UserResponse> {
     const user = await this.prisma.user.findUnique({
       where: { email },
@@ -68,7 +75,7 @@ export class AuthService implements AuthServiceInterface {
       throw new UnauthorizedException('Invalid password');
     }
 
-    return { user };
+    return { user: this.transformUserResponse(user) };
   }
 
   async socialLogin(
@@ -207,7 +214,7 @@ export class AuthService implements AuthServiceInterface {
 
     return {
       access_token: accessToken,
-      user,
+      user: this.transformUserResponse(user),
     };
   }
 
@@ -245,7 +252,7 @@ export class AuthService implements AuthServiceInterface {
 
       return {
         access_token: accessToken,
-        user: newUser,
+        user: this.transformUserResponse(newUser),
       };
     } catch (error) {
       console.error('Error creating user:', error);
@@ -384,7 +391,7 @@ export class AuthService implements AuthServiceInterface {
 
     return {
       access_token: accessToken,
-      user,
+      user: this.transformUserResponse(user),
     };
   }
 

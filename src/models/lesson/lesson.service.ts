@@ -39,7 +39,13 @@ export class LessonService implements ILessonService {
 
   private readonly lessonIncludeQuery = {
     include: {
-      submissions: true,
+      createdBy: {
+        include: {
+          teacherProfile: true,
+          studentProfile: true,
+        },
+      },
+      // submissions: true,
     },
   };
 

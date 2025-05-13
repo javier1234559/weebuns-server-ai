@@ -45,7 +45,8 @@ export class UserService implements UserServiceInterface {
   }
 
   async findAll(findAllUsersDto: FindAllUserQuery): Promise<UsersResponse> {
-    const { page, perPage, search } = findAllUsersDto;
+    const { page, perPage, search, role, username, email, createdAt } =
+      findAllUsersDto;
 
     const queryOptions = {
       where: {
@@ -53,6 +54,10 @@ export class UserService implements UserServiceInterface {
         ...(search
           ? searchQuery(search, ['username', 'email', 'firstName', 'lastName'])
           : {}),
+        ...(role ? { role } : {}),
+        ...(username ? { username: { contains: username } } : {}),
+        ...(email ? { email: { contains: email } } : {}),
+        ...(createdAt ? { createdAt: { gte: new Date(createdAt) } } : {}),
       },
       orderBy: { createdAt: 'desc' },
       ...paginationQuery(page, perPage),

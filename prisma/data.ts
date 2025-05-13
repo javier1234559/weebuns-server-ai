@@ -308,11 +308,16 @@ History is his last class of the day. Lucas has a hard time staying awake. Many 
       'https://img.freepik.com/free-photo/english-books-resting-table-working-space_23-2149429616.jpg?semt=ais_hybrid',
     timeLimit: 40,
     content: {
-      text: 'Talk about your favorite food',
-      promptAI:
-        'Act as an IELTS speaking task 2 expert. You will be given a task and you need to speak about your favorite food for IELTS Speaking Task 2. The task is to speak about your favorite food for IELTS Speaking Task 2. The essay should be 250 words long. The essay should be written in a formal and academic style. The essay should be written in a way that is easy to understand.',
-      instructions:
-        'Write at least 250 words. Structure your essay clearly with an introduction, body paragraphs and conclusion. Support your arguments with examples and explanations.',
+      promptText: "Let's practice speaking English",
+      topicText: 'Travel and Tourism',
+      followupExamples: [
+        'What places have you visited?',
+        'How was your last trip?',
+        'Do you prefer traveling alone or with friends?',
+        'What country would you like to visit next and why?',
+      ],
+      backgroundKnowledge:
+        "Focus on travel experiences, cultural differences, and common travel vocabulary such as 'hotel', 'sightseeing', 'itinerary', 'passport'.",
     },
     status: ContentStatus.published,
     createdById: userIds[1],
