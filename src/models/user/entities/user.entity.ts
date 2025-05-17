@@ -4,10 +4,8 @@ import {
   UserRole,
   TeacherProfile,
   StudentProfile,
-  SkillType,
 } from '@prisma/client';
 import { IUser } from '../interface/user.interface';
-import { Decimal } from '@prisma/client/runtime/library';
 
 export class TeacherProfileEntity implements TeacherProfile {
   @ApiProperty({
@@ -21,31 +19,34 @@ export class TeacherProfileEntity implements TeacherProfile {
   userId: string;
 
   @ApiProperty({
-    type: 'array',
-    items: {
-      type: 'string',
-      enum: Object.values(SkillType),
-    },
+    type: 'string',
+    nullable: true,
   })
-  specialization: SkillType[];
+  longBio: string | null;
 
   @ApiProperty({
     type: 'string',
     nullable: true,
   })
-  qualification: string | null;
+  introVideoUrlEmbed: string | null;
 
   @ApiProperty({
-    type: 'number',
+    type: 'string',
     nullable: true,
   })
-  teachingExperience: number | null;
+  certifications: string | null;
 
   @ApiProperty({
-    type: 'number',
+    type: 'string',
     nullable: true,
   })
-  hourlyRate: Decimal | null;
+  teachingExperience: string | null;
+
+  @ApiProperty({
+    type: 'string',
+    nullable: true,
+  })
+  other: string | null;
 
   @ApiProperty({
     type: 'string',
@@ -202,6 +203,12 @@ export class User implements IUser {
     nullable: true,
   })
   profilePicture: string | null;
+
+  @ApiProperty({
+    type: 'string',
+    nullable: true,
+  })
+  bio: string | null;
 
   @ApiProperty({
     type: 'boolean',

@@ -62,6 +62,12 @@ export class UserDto implements Omit<User, 'passwordHash'> {
     type: 'string',
     nullable: true,
   })
+  bio: string | null;
+
+  @ApiProperty({
+    type: 'string',
+    nullable: true,
+  })
   authProviderId: string | null;
 
   @ApiProperty({

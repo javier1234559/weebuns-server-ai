@@ -100,6 +100,7 @@ export class AuthService implements AuthServiceInterface {
             role: UserRole.user,
             authProvider: provider,
             isEmailVerified: true,
+            bio: '',
           },
           include: {
             teacherProfile: true,
@@ -243,6 +244,7 @@ export class AuthService implements AuthServiceInterface {
           lastName: lastName,
           role: UserRole.user,
           authProvider: AuthProvider.local,
+          bio: '',
         },
         include: this.includeProfiles,
       });

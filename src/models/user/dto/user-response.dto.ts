@@ -67,6 +67,12 @@ export class UserDto implements Omit<User, 'passwordHash'> {
   role: UserRole;
 
   @ApiProperty({
+    type: 'string',
+    nullable: true,
+  })
+  bio: string | null;
+
+  @ApiProperty({
     enum: AuthProvider,
     enumName: 'AuthProvider',
     example: AuthProvider.local,

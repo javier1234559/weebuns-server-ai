@@ -128,6 +128,7 @@ model User {
   firstName       String?      @map("first_name")
   lastName        String?      @map("last_name")
   profilePicture  String?      @map("profile_picture")
+  bio             String?      @map("bio")
   isEmailVerified Boolean      @default(false) @map("is_email_verified")
   lastLogin       DateTime?    @map("last_login")
   createdAt       DateTime     @default(now()) @map("created_at")
@@ -154,15 +155,18 @@ model User {
 }
 
 model TeacherProfile {
-  id                 String      @id @default(uuid()) @db.Uuid
-  userId             String      @unique @map("user_id") @db.Uuid
-  specialization     SkillType[]
-  qualification      String?     @db.Text
-  teachingExperience Int?        @map("teaching_experience")
-  hourlyRate         Decimal?    @map("hourly_rate")
-  createdAt          DateTime    @default(now()) @map("created_at")
-  updatedAt          DateTime    @updatedAt @map("updated_at")
-  deletedAt          DateTime?   @map("deleted_at")
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @unique @map("user_id") @db.Uuid
+
+  longBio            String? @map("long_bio")
+  introVideoUrlEmbed String? @map("intro_video_url_embed")
+  certifications     String? @map("certifications")
+  teachingExperience String? @map("teaching_experience")
+  other              String? @map("other")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

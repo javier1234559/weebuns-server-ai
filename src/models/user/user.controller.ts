@@ -50,6 +50,15 @@ export class UserController {
     return this.userService.findById(id);
   }
 
+  @Get('username/:username')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: UserResponse,
+  })
+  findByUsername(@Param('username') username: string): Promise<UserResponse> {
+    return this.userService.findByUsername(username);
+  }
+
   @Post('teachers')
   @Roles(UserRole.ADMIN)
   @ApiResponse({

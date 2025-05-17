@@ -125,6 +125,7 @@ export const users: Prisma.UserCreateInput[] = [
     role: UserRole.user,
     authProvider: AuthProvider.local,
     firstName: 'Student',
+    bio: 'Student bio',
     lastName: 'One',
     profilePicture: 'https://example.com/student1.jpg',
     isEmailVerified: true,
@@ -138,6 +139,7 @@ export const users: Prisma.UserCreateInput[] = [
     role: UserRole.teacher,
     authProvider: AuthProvider.local,
     firstName: 'Teacher',
+    bio: 'Teacher bio',
     lastName: 'One',
     profilePicture: 'https://example.com/teacher1.jpg',
     isEmailVerified: true,
@@ -152,6 +154,7 @@ export const users: Prisma.UserCreateInput[] = [
     authProvider: AuthProvider.local,
     firstName: 'Admin',
     lastName: 'One',
+    bio: 'Admin bio',
     profilePicture: 'https://example.com/admin1.jpg',
     isEmailVerified: true,
     lastLogin: new Date(),
@@ -160,15 +163,14 @@ export const users: Prisma.UserCreateInput[] = [
 
 export const createTeacherProfiles = (userIds: string[]) => [
   {
-    user: {
-      connect: {
-        id: userIds[1],
-      },
-    },
-    specialization: [SkillType.speaking, SkillType.writing],
-    qualification: 'TESOL Certified, 5 years teaching experience',
-    teachingExperience: 5,
-    hourlyRate: 25,
+    userId: userIds[1],
+    longBio:
+      'Experienced English teacher with a passion for helping students achieve their language learning goals.',
+    introVideoUrlEmbed: 'https://www.youtube.com/embed/2JzAHYg0zLY',
+    certifications: 'TESOL Certified',
+    teachingExperience:
+      '5 years of teaching experience in both online and classroom settings',
+    other: 'Specialized in business English and test preparation',
   },
 ];
 
@@ -191,20 +193,45 @@ export const createStudentProfiles = (userIds: string[]) => [
 export const createLessons = (userIds: string[]) => [
   {
     skill: SkillType.writing,
-    title: 'IELTS Writing Task 2: Opinion Essay',
+    title: 'IELTS Writing Task 2: Does workaholism have positive effects?',
     description: 'Practice writing an opinion essay for IELTS Writing Task 2',
     lessonType: LessonType.practice,
     level: 'intermediate',
     topic: 'ielts',
     thumbnailUrl:
-      'https://img.freepik.com/free-photo/english-books-resting-table-working-space_23-2149429616.jpg?semt=ais_hybrid',
+      'https://img.freepik.com/vector-mien-phi/procrastination-concept-illustration_114360-17291.jpg',
     timeLimit: 40,
     content: {
-      text: 'Some people think that children should begin their formal education at a very early age and should spend most of their time on school studies. Others believe that young children should spend most of their time playing. Discuss both views and give your own opinion.',
-      promptAI:
-        'Act as an IELTS writing task 2 expert. You will be given a task and you need to write a task 2 essay for the task. The task is to write an opinion essay for IELTS Writing Task 2. The essay should be 250 words long. The essay should be written in a formal and academic style. The essay should be written in a way that is easy to understand.',
-      instructions:
-        'Write at least 250 words. Structure your essay clearly with an introduction, body paragraphs and conclusion. Support your arguments with examples and explanations.',
+      task: 'Nowadays, more people move away from their friends and families for work. Do advantages outweigh the disadvantages?',
+      ai_prompt:
+        'You are an expert IELTS writing teacher. You help students to improve their IELTS improve Idea and response Example like Introduction,Body1,Body2,Conclusion.',
+      resources: {
+        sample_essay: {
+          body1:
+            '<p><strong>Admittedly, there may be some consequences when people leave their homes for a new place in search of better job opportunities. </strong><span style="color: rgb(45, 194, 107);">One of them is that migrating across the country may emotionally impact migrants and their loved ones. Since life is often centered around established social circles, including families and friends, moving to a new location can result in homesickness and a sense of missing out on important events, potentially causing family members to drift apart over time. This is especially true in Asia, where people often value quality time with their family over socializing with friends. </span><span style="color: rgb(53, 152, 219);">On a societal level, moving away for work could potentially cause instability in the labor market in less developed regions. This is because it could be difficult for rural enterprises to find suitable candidates for their job vacancies, eventually compromising their productivity as well as the competitiveness of the local economy.</span></p>',
+          body2:
+            '\n        <p><strong>However, despite these disadvantages, the benefits of relocating for work are more significant.</strong><span style="color: rgb(45, 194, 107);"> In terms of career prospects, settling down in a new environment could help migrants to have the opportunity to pursue their dreams, which would only be possible by moving away from narrow minded people in the countryside. For example, in Asia, parents and the elderly often emphasize career stability over pursuing one’s passions, which leads to false expectations for their children’s futures, thus suppressing young people’s talents. </span><span style="color: rgb(53, 152, 219);">Another benefit could be the opportunity to live in a foreign country, which, in addition to possible higher salaries, enables migrants to pursue jobs that may not be available in their home countries. A case in point is that IT workers stand to benefit greatly from working for major tech corporations in the US.</span></p>',
+          conclusion:
+            '<p dir="ltr">In conclusion, while I acknowledge that relocating for work may pose certain problems relating to migrants\' feelings and the rural economy, I am convinced that the advantages in personal and professional growth are far more impactful.</p>',
+          instruction:
+            '\n        <div class="p-3 body-2 z-10 mb-[4px] flex-1 border border-[#13A62E] rounded-[8px] bg-[#E5F6E9]" style="min-height: calc(54px);"><div><p>It has become more common for people to relocate to a new city or country for work. <strong>Although this trend may present certain challenges, I believe the resultant benefits far outweigh them.</strong></p></div></div>',
+        },
+        analysis_guide:
+          "<h2>HƯỚNG DẪN VIẾT BÀI</h2><p>&nbsp;</p><h3><em>Xem livestream giải đề này cùng thầy Phạm Minh Khoa (</em><strong><em>2 lần 9.0</em></strong><em>) <u>tại đây bạn nhé!</u></em></h3><p>&nbsp;</p><h2><strong><u>1. Giải thích đề</u></strong></h2><ul><li><p>Đề bài nói về xu hướng ngày càng nhiều người rời xa bạn bè và gia đình để đi làm việc ở nơi khác. Đề bài yêu cầu bạn cân nhắc xem liệu lợi ích của xu hướng này có lớn hơn những bất lợi hay không.</p></li></ul><ul><li><p>Đây là một chủ đề phổ biến trong thời đại toàn cầu hóa, khi người lao động có xu hướng di chuyển (<strong>relocate</strong>) đến các thành phố lớn hoặc nước ngoài để tìm kiếm cơ hội việc làm tốt hơn. Xu hướng này đặc biệt phổ biến ở các nước đang phát triển, nơi mà sự chênh lệch về cơ hội giữa các vùng miền còn lớn.</p></li></ul><p>&nbsp;</p><h2><strong><u>2. Gợi ý lập luận &amp; phân body</u></strong></h2><ul><li><p>Bạn có thể cho rằng lợi ích lớn hơn hoặc nhỏ hơn so với bất lợi.</p></li><li><p><strong>Trong bài này, chúng mình sẽ lập luận theo cách 40/60 (balanced approach)</strong></p></li><li><p>Chúng mình cho rằng lợi ích lớn hơn nhiều so với bất lợi (<strong>benefits far outweigh them</strong>). Chúng ta sẽ theo hướng này.</p><ul><li><p>Body 1 sẽ bàn về những bất lợi của việc di chuyển đi làm xa.</p></li><li><p>Body 2 sẽ thảo luận về những lợi ích đáng kể hơn của việc này.</p></li></ul></li></ul><p>&nbsp;</p><h2><strong><u>3. Gợi ý viết body 1</u></strong></h2><p>Mình sẽ bàn về những bất lợi của việc di chuyển đi làm xa.</p><p>Cấu trúc: Topic Sentence ➜ Supporting Idea 1 ➜ Supporting idea 2</p><h3>&nbsp;✦ <u>Topic sentence:</u></h3><p>Việc di chuyển đi xa (<strong>relocating</strong>) để tìm việc có thể gây ra một số hậu quả (<strong>consequences</strong>) cho người di cư và xã hội.</p><h3>&nbsp;✦ <u>Supporting idea 1:</u></h3><p>Di cư (<strong>migrating</strong>) có thể gây tác động về mặt cảm xúc (<strong>emotionally impact</strong>) đối với người di cư và người thân</p><p>&nbsp; ➜ cuộc sống thường xoay quanh các mối quan hệ xã hội đã thiết lập (<strong>established social circles</strong>)&nbsp;</p><p>&nbsp; ➜ chuyển đến nơi mới có thể gây nhớ nhà (<strong>homesickness</strong>) và cảm giác bỏ lỡ các sự kiện quan trọng (<strong>missing out on important events</strong>)</p><p>&nbsp; ➜ có thể làm cho các thành viên gia đình xa cách nhau theo thời gian (<strong>drift apart over time</strong>)</p><p>&nbsp; ➜ đặc biệt đúng ở châu Á, nơi mọi người thường coi trọng thời gian chất lượng với gia đình hơn là giao tiếp xã hội với bạn bè</p><h3>&nbsp;✦ <u>Supporting idea 2:</u></h3><p>Ở cấp độ xã hội (<strong>societal level</strong>), di chuyển đi làm xa có thể gây bất ổn cho thị trường lao động (<strong>instability in the labor market</strong>) ở các vùng kém phát triển hơn</p><p>&nbsp; ➜ doanh nghiệp nông thôn (<strong>rural enterprises</strong>) khó tìm được ứng viên phù hợp cho vị trí tuyển dụng</p><p>&nbsp; ➜ ảnh hưởng đến năng suất (<strong>compromising their productivity</strong>) và khả năng cạnh tranh của nền kinh tế địa phương (<strong>competitiveness of the local economy</strong>)</p><p>&nbsp;</p><h2><strong><u>4. Gợi ý viết body 2</u></strong></h2><p>Mình sẽ bàn về những lợi ích đáng kể của việc di chuyển đi làm xa.</p><p>Cấu trúc: Topic Sentence ➜ Supporting Idea 1 ➜ Supporting idea 2</p><h3>&nbsp;✦ <u>Topic sentence:</u></h3><p>Việc di chuyển đi xa để làm việc mang lại những lợi ích đáng kể hơn (<strong>more significant</strong>) bất lợi của nó.</p><h3>&nbsp;✦ <u>Supporting idea 1:</u></h3><p>Về triển vọng nghề nghiệp (<strong>career prospects</strong>), định cư ở một môi trường mới (<strong>settling down in a new environment</strong>) giúp người di cư có cơ hội theo đuổi ước mơ (<strong>pursue their dreams</strong>)</p><p>&nbsp; ➜ tránh xa những người có tư tưởng hẹp hòi ở nông thôn (<strong>narrow minded people in the countryside</strong>)</p><p>&nbsp; ➜ ví dụ ở châu Á, cha mẹ và người lớn tuổi thường đề cao sự ổn định nghề nghiệp hơn là theo đuổi đam mê (<strong>pursuing one's passions</strong>)</p><p>&nbsp; ➜ tạo ra kỳ vọng sai lầm về tương lai của con cái (<strong>false expectations for their children's futures</strong>)&nbsp;</p><p>&nbsp; ➜ kìm hãm tài năng của giới trẻ (<strong>suppressing young people's talents</strong>)</p><h3>&nbsp;✦ <u>Supporting idea 2:</u></h3><p>Cơ hội sống ở nước ngoài (<strong>live in a foreign country</strong>)</p><p>&nbsp; ➜ ngoài mức lương có thể cao hơn (<strong>higher salaries</strong>), còn cho phép người di cư theo đuổi những công việc không có sẵn ở quê nhà</p><p>&nbsp; ➜ ví dụ như công nhân IT được hưởng lợi rất nhiều khi làm việc cho các tập đoàn công nghệ lớn ở Mỹ (<strong>major tech corporations in the US</strong>)</p>",
+      },
+      vocabulary_list: [
+        {
+          tags: [],
+          term: 'Narrow-minded',
+          meaning: [
+            'Having or showing a lack of understanding or awareness of the wider world or of different opinions or ways of life.',
+          ],
+          next_review: '2025-05-17T02:11:12.345Z',
+          example_sentence:
+            'The narrow-minded people in the countryside are not open to new ideas.',
+          repetition_level: 0,
+        },
+      ],
     },
     status: ContentStatus.published,
     createdById: userIds[1],
@@ -216,39 +243,92 @@ export const createLessons = (userIds: string[]) => [
     lessonType: LessonType.practice,
     level: 'intermediate',
     thumbnailUrl:
-      'https://img.freepik.com/free-photo/english-books-resting-table-working-space_23-2149429616.jpg?semt=ais_hybrid',
+      'https://img.freepik.com/hinh-chup-mien-phi/privacy-policy-information-principle-strategy-rules-concept_53876-147698.jpg',
     topic: 'ielts',
     timeLimit: 40,
     content: {
-      text: `Lucas goes to school every day of the week. He has many subjects to go to each school day: English, art, science, mathematics, gym, and history. His mother packs a big backpack full of books and lunch for Lucas.
-His first class is English, and he likes that teacher very much. His English teacher says that he is a good pupil, which Lucas knows means that she thinks he is a good student.
-His next class is art. He draws on paper with crayons and pencils and sometimes uses a ruler. Lucas likes art. It is his favorite class.
-His third class is science. This class is very hard for Lucas to figure out, but he gets to work with his classmates a lot, which he likes to do. His friend, Kyle, works with Lucas in science class, and they have fun.
-Then Lucas gets his break for lunch. He sits with Kyle while he eats. The principal, or the headmaster as some call him, likes to walk around and talk to students during lunch to check that they are all behaving.
-The next class is mathematics, which most of the students just call math. Kyle has trouble getting a good grade in mathematics, but the teacher is very nice and helpful.
-His fourth class is gym. It is just exercising.
-History is his last class of the day. Lucas has a hard time staying awake. Many lessons are boring, and he is very tired after doing gym.`,
+      text: 'To: All Staff\nFrom: Human Resources Department\nSubject: Updated Office Attendance Policy\n\nDear Employees,\n\nWe would like to inform you of an important update to our attendance policy. Starting next Monday, all employees are required to clock in using the new digital attendance system installed at the main entrance.\n\nThis system will automatically record your arrival and departure times. Please ensure that you arrive no later than 9:00 A.M. and do not leave before 5:00 P.M. without prior approval from your supervisor.\n\nAny employee who fails to follow this procedure three times within a month may be subject to a warning.\n\nIf you have any questions, please contact the HR department.',
       questions: [
         {
-          id: '12',
-          question: 'Which one is true ?',
-          right_answer: 'true',
+          id: '1',
+          question: 'What is the main purpose of this email?',
           answer_list: [
             {
-              answer: 'false2',
+              answer: 'To announce a new employee benefit',
             },
             {
-              answer: 'false1',
+              answer: 'To introduce a new attendance system',
             },
             {
-              answer: 'false3',
+              answer: 'To promote an employee training session',
             },
             {
-              answer: 'true',
+              answer: 'To notify about a holiday schedule',
             },
           ],
-          is_bookmark: true,
-          selected_answer: 'true',
+          is_bookmark: false,
+          right_answer: 'To introduce a new attendance system',
+        },
+        {
+          id: '2',
+          question: 'When will the new system be implemented?',
+          answer_list: [
+            {
+              answer: 'Tomorrow',
+            },
+            {
+              answer: 'Next Monday',
+            },
+            {
+              answer: 'This Friday',
+            },
+            {
+              answer: 'Next month',
+            },
+          ],
+          is_bookmark: false,
+          right_answer: 'Next Monday',
+        },
+        {
+          id: '3',
+          question:
+            'What will happen if an employee fails to follow the policy three times in a month?',
+          answer_list: [
+            {
+              answer: 'They will be fined',
+            },
+            {
+              answer: 'They will lose a bonus',
+            },
+            {
+              answer: 'They may receive a warning',
+            },
+            {
+              answer: 'They must attend a training',
+            },
+          ],
+          is_bookmark: false,
+          right_answer: 'They may receive a warning',
+        },
+        {
+          id: '4',
+          question: 'Where is the attendance system located?',
+          answer_list: [
+            {
+              answer: 'In each department',
+            },
+            {
+              answer: 'At the front desk',
+            },
+            {
+              answer: 'Online via mobile app',
+            },
+            {
+              answer: 'At the main entrance',
+            },
+          ],
+          is_bookmark: false,
+          right_answer: 'At the main entrance',
         },
       ],
     },
@@ -268,28 +348,67 @@ History is his last class of the day. Lucas has a hard time staying awake. Many 
     timeLimit: 40,
     content: {
       audio_url:
-        'https://ubp4bdepbl.ufs.sh/f/fkClDhMQd7TEhczv4c20jGCrUK3yIO18HXvFLsN7Wm5MwPha',
+        'https://utfs.io/a/ubp4bdepbl/fkClDhMQd7TEIi23FhqP0S9vF1zWsX4manbGgQOe8ilp7DAd',
       questions: [
         {
-          id: '12',
-          question: 'Which one is true ?',
-          right_answer: 'true',
+          id: '1',
+          question: 'What did the speaker order?',
           answer_list: [
             {
-              answer: 'false2',
+              answer: 'A chicken sandwich',
             },
             {
-              answer: 'false1',
+              answer: 'A grilled chicken salad',
             },
             {
-              answer: 'false3',
+              answer: 'A bowl of soup',
             },
             {
-              answer: 'true',
+              answer: 'A beef burger',
             },
           ],
-          is_bookmark: true,
-          selected_answer: 'true',
+          is_bookmark: false,
+          right_answer: 'A grilled chicken salad',
+        },
+        {
+          id: '2',
+          question: 'Why did the speaker ask for the dressing on the side?',
+          answer_list: [
+            {
+              answer: 'They are allergic to it',
+            },
+            {
+              answer: "They don't like the taste",
+            },
+            {
+              answer: 'They are trying to eat healthier',
+            },
+            {
+              answer: 'The waiter suggested it',
+            },
+          ],
+          is_bookmark: false,
+          right_answer: 'They are trying to eat healthier',
+        },
+        {
+          id: '3',
+          question: 'How much did the speaker pay for the meal?',
+          answer_list: [
+            {
+              answer: '$9.75',
+            },
+            {
+              answer: '$10.50',
+            },
+            {
+              answer: '$11.20',
+            },
+            {
+              answer: '$12.00',
+            },
+          ],
+          is_bookmark: false,
+          right_answer: '$10.50',
         },
       ],
     },
@@ -298,14 +417,14 @@ History is his last class of the day. Lucas has a hard time staying awake. Many 
   },
   {
     skill: SkillType.speaking,
-    title: 'IELTS Speaking : Talk about your favorite food',
+    title: 'IELTS Speaking : Talk about your travel experience',
     description:
-      'Practice speaking about your favorite food for IELTS Speaking',
+      'Practice speaking about your travel experience for IELTS Speaking',
     lessonType: LessonType.practice,
     level: 'intermediate',
     topic: 'ielts',
     thumbnailUrl:
-      'https://img.freepik.com/free-photo/english-books-resting-table-working-space_23-2149429616.jpg?semt=ais_hybrid',
+      'https://img.freepik.com/hinh-chup-mien-phi/travel-concept-with-baggage_23-2149153260.jpg?ga=GA1.1.1179737765.1747448580&semt=ais_hybrid&w=740',
     timeLimit: 40,
     content: {
       promptText: "Let's practice speaking English",
@@ -458,7 +577,7 @@ export const tokenPackages: Prisma.TokenPackageCreateInput[] = [
 
 export const createTokenWallet = (userIds: string[]) => ({
   userId: userIds[0], // test_user
-  balance: 10,
+  balance: 100,
 });
 
 export const createTransaction = (userIds: string[], packageId: string) => ({
@@ -472,24 +591,3 @@ export const createTransaction = (userIds: string[], packageId: string) => ({
   paymentDate: new Date(),
   type: 'token_purchase',
 });
-
-// export const featureTokenConfigs: Prisma.FeatureTokenConfigCreateInput[] = [
-//     {
-//         featureCode: FeatureCode.submission,
-//         tokenCost: 10,
-//         description: 'Submit writing or speaking practice for teacher review',
-//         isActive: true
-//     },
-//     {
-//         featureCode: FeatureCode.ai_chat,
-//         tokenCost: 1,
-//         description: 'Chat with AI tutor',
-//         isActive: true
-//     },
-//     {
-//         featureCode: FeatureCode.upgrade_suggestion,
-//         tokenCost: 5,
-//         description: 'Get AI suggestions to improve your writing/speaking',
-//         isActive: true
-//     }
-// ];

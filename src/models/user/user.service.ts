@@ -88,13 +88,27 @@ export class UserService implements UserServiceInterface {
     return { user: this.transformUserResponse(user) };
   }
 
+  async findByUsername(username: string): Promise<UserResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      ...this.userIncludeQuery,
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with username ${username} not found`);
+    }
+
+    return { user: this.transformUserResponse(user) };
+  }
+
   async createTeacher(teacherDto: TeacherDto): Promise<UserResponse> {
     const {
       password,
-      specialization,
-      qualification,
+      longBio,
+      introVideoUrlEmbed,
+      certifications,
       teachingExperience,
-      hourlyRate,
+      other,
       ...userData
     } = teacherDto;
 
@@ -119,10 +133,11 @@ export class UserService implements UserServiceInterface {
         authProvider: AuthProvider.local,
         teacherProfile: {
           create: {
-            specialization,
-            qualification,
+            longBio,
+            introVideoUrlEmbed,
+            certifications,
             teachingExperience,
-            hourlyRate,
+            other,
           },
         },
       },
@@ -151,10 +166,11 @@ export class UserService implements UserServiceInterface {
 
     const {
       password,
-      specialization,
-      qualification,
+      longBio,
+      introVideoUrlEmbed,
+      certifications,
       teachingExperience,
-      hourlyRate,
+      other,
       username,
       email,
       ...userData
@@ -192,10 +208,11 @@ export class UserService implements UserServiceInterface {
       email,
       teacherProfile: {
         update: {
-          specialization,
-          qualification,
+          longBio,
+          introVideoUrlEmbed,
+          certifications,
           teachingExperience,
-          hourlyRate,
+          other,
         },
       },
     };
@@ -231,10 +248,11 @@ export class UserService implements UserServiceInterface {
     }
 
     const {
-      specialization,
-      qualification,
+      longBio,
+      introVideoUrlEmbed,
+      certifications,
       teachingExperience,
-      hourlyRate,
+      other,
       ...basicData
     } = data;
 
@@ -245,18 +263,20 @@ export class UserService implements UserServiceInterface {
         teacherProfile: user.teacherProfile
           ? {
               update: {
-                specialization,
-                qualification,
+                longBio,
+                introVideoUrlEmbed,
+                certifications,
                 teachingExperience,
-                hourlyRate,
+                other,
               },
             }
           : {
               create: {
-                specialization,
-                qualification,
+                longBio,
+                introVideoUrlEmbed,
+                certifications,
                 teachingExperience,
-                hourlyRate,
+                other,
               },
             },
       },

@@ -5,7 +5,6 @@ import { Type, Transform } from 'class-transformer';
 import {
   IsOptional,
   IsString,
-  IsArray,
   IsNumber,
   IsDecimal,
   IsDate,
@@ -32,31 +31,30 @@ export class ProfileDto {
   profilePicture?: string;
 
   // Teacher Profile
-  @ApiProperty({ required: false, type: [String], enum: SkillType })
+  @ApiProperty({ required: false })
   @IsOptional()
-  @IsArray()
-  specialization?: SkillType[];
+  @IsString()
+  longBio?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  qualification?: string;
+  introVideoUrlEmbed?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsNumber()
-  teachingExperience?: number;
+  @IsString()
+  certifications?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsNumber()
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      return parseFloat(value);
-    }
-    return value;
-  })
-  hourlyRate?: number;
+  @IsString()
+  teachingExperience?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  other?: string;
 
   // Student Profile
   @ApiProperty({ required: false })
@@ -197,7 +195,7 @@ export class CreateTeacherDto {
   @IsString()
   lastName: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   profilePicture?: string;
@@ -358,25 +356,28 @@ export class TeacherDto {
   @IsString()
   profilePicture?: string;
 
-  @ApiProperty({ type: [String], enum: SkillType })
-  @IsArray()
-  specialization: SkillType[];
-
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  qualification: string;
+  longBio?: string;
 
-  @ApiProperty()
-  @IsNumber()
-  teachingExperience: number;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  introVideoUrlEmbed?: string;
 
-  @ApiProperty()
-  @IsNumber()
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      return parseFloat(value);
-    }
-    return value;
-  })
-  hourlyRate: number;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  certifications?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  teachingExperience?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  other?: string;
 }

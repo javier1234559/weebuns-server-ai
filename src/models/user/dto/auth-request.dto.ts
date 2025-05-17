@@ -88,21 +88,26 @@ export class ResetPasswordDto {
 
 export class RegisterDto {
   @IsEmail()
+  @ApiProperty()
   email: string;
 
   @IsString()
+  @ApiProperty()
   username: string;
 
   @IsString()
   @MinLength(6)
+  @ApiProperty()
   password: string;
 
   @IsString()
   @IsOptional()
+  @ApiProperty()
   firstName?: string;
 
   @IsString()
   @IsOptional()
+  @ApiProperty()
   lastName?: string;
 }
 

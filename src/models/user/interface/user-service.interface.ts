@@ -12,6 +12,7 @@ export interface UserServiceInterface {
 
   findAll(dto: FindAllUserQuery): Promise<UsersResponse>;
   findById(id: string): Promise<UserResponse>;
+  findByUsername(username: string): Promise<UserResponse>;
   createTeacher(data: TeacherDto): Promise<UserResponse>;
   updateTeacher(id: string, data: TeacherDto): Promise<UserResponse>;
   remove(id: string): Promise<DeleteUserResponse>;
