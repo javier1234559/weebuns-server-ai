@@ -37,7 +37,7 @@ import { ContentReadingSubmissionDTO } from './dto/content/reading-submission.dt
 import { ContentListeningSubmissionDTO } from './dto/content/listening-submission.dto';
 import { ContentWritingSubmissionDTO } from './dto/content/writing-submission.dto';
 import { ContentSpeakingSubmissionDTO } from './dto/content/speaking-submission.dto';
-import { serializeJSON } from 'src/common/utils/format';
+import { formatNumberPrecision, serializeJSON } from 'src/common/utils/format';
 import {
   ContentWritingDTO,
   SampleEssayDTO,
@@ -223,7 +223,9 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       totalQuestions: dto.content.questions.length,
       correctAnswers,
       incorrectAnswers: dto.content.questions.length - correctAnswers,
-      accuracy: (correctAnswers / dto.content.questions.length) * 100,
+      accuracy: formatNumberPrecision(
+        (correctAnswers / dto.content.questions.length) * 100,
+      ),
     };
 
     const submission = await this.prisma.lessonSubmission.create({
@@ -290,7 +292,9 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       totalQuestions: dto.content.question_list.length,
       correctAnswers,
       incorrectAnswers: dto.content.question_list.length - correctAnswers,
-      accuracy: (correctAnswers / dto.content.question_list.length) * 100,
+      accuracy: formatNumberPrecision(
+        (correctAnswers / dto.content.question_list.length) * 100,
+      ),
     };
 
     const submission = await this.prisma.lessonSubmission.create({

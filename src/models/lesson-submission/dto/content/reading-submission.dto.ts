@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsString,
+  IsOptional,
+  IsBoolean,
+  ValidateNested,
+} from 'class-validator';
 
 class AnswerDTO {
   @ApiProperty()
@@ -24,9 +30,13 @@ export class QuestionDTO {
   answer_list: AnswerDTO[];
 
   @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
   is_bookmark: boolean;
 
   @ApiProperty()
+  @IsOptional()
+  @IsString()
   selected_answer: string;
 }
 
