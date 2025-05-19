@@ -61,7 +61,6 @@ export class LessonSubmissionController {
     @CurrentUser() user: IAuthPayload,
   ): Promise<LessonSubmissionsResponse> {
     const userId = String(user.sub);
-    console.log(userId);
     return this.lessonSubmissionService.getAllSubmissionsByUser(userId, query);
   }
 

@@ -34,6 +34,11 @@ export class UseTokensDto {
 }
 
 export class FindAllTransactionsQuery extends PaginationInputDto {
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  search?: string;
+
   @ApiPropertyOptional({ enum: PaymentType })
   @IsEnum(PaymentType)
   @IsOptional()

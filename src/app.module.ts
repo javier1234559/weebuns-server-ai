@@ -8,7 +8,7 @@ import { LessonSubmissionModule } from 'src/models/lesson-submission/lesson-subm
 import { VocabularyModule } from 'src/models/vocabulary/vocabulary.module';
 import { TokenModule } from 'src/models/token/token.module';
 import { PaymentModule } from 'src/models/payment/payment.module';
-
+import { NotificationModule } from 'src/models/notification/notification.module';
 @Module({
   imports: [
     AiModule,
@@ -20,6 +20,7 @@ import { PaymentModule } from 'src/models/payment/payment.module';
     VocabularyModule,
     PaymentModule,
     TokenModule,
+    NotificationModule,
   ],
   controllers: [],
   providers: [],

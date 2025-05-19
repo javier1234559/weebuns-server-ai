@@ -23,10 +23,9 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { TransactionType } from 'src/common/enum/common';
 import { PaymentService } from 'src/models/payment/payment.service';
-import { OnEvent } from '@nestjs/event-emitter';
-import { PaymentCompletedEvent } from '../payment/events/payment.events';
 import * as moment from 'moment';
 import { TokenPackage } from './entities/token-package.entity';
+
 @Injectable()
 export class TokenService implements ITokenService {
   constructor(
@@ -95,8 +94,6 @@ export class TokenService implements ITokenService {
       },
     });
 
-    console.log(paymentUrl);
-
     return { paymentUrl };
   }
 
@@ -138,12 +135,14 @@ export class TokenService implements ITokenService {
   async getAdminTransactions(
     query: FindAllTransactionsQuery,
   ): Promise<TransactionsResponse> {
-    const { page, perPage, paymentType, status, type, from, to } = query;
+    const { page, perPage, paymentType, status, type, search, from, to } =
+      query;
 
     const where = {
       ...(paymentType && { paymentType }),
       ...(status && { status }),
       ...(type && { type }),
+      ...(search && { transactionId: { contains: search } }),
       ...(from &&
         to && {
           paymentDate: {
@@ -212,40 +211,5 @@ export class TokenService implements ITokenService {
         },
       },
     });
-  }
-
-  @OnEvent('payment.completed')
-  async handlePaymentCompleted(event: PaymentCompletedEvent) {
-    const { transactionId } = event;
-
-    console.log(JSON.stringify(event, null, 2));
-    // if (status === 'success') { // TODO: Uncomment this when payment is FIXED
-    // Update transaction status
-    await this.prisma.transaction.update({
-      where: { transactionId },
-      data: { status: 'completed' },
-    });
-
-    // Add tokens to user balance
-    const transaction = await this.prisma.transaction.findUnique({
-      where: { transactionId },
-      include: { package: true },
-    });
-
-    if (transaction) {
-      await this.prisma.tokenWallet.upsert({
-        where: { userId: transaction.userId },
-        create: {
-          userId: transaction.userId,
-          balance: Math.max(0, transaction.tokenAmount),
-        },
-        update: {
-          balance: {
-            increment: transaction.tokenAmount,
-          },
-        },
-      });
-    }
-    // }
   }
 }
