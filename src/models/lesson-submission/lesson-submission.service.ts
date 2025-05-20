@@ -43,10 +43,16 @@ import {
   SampleEssayDTO,
 } from 'src/models/lesson/dto/content/writing.dto';
 import { Prisma } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { SubmissionEventType } from './events/submission.event';
+import config from 'src/config';
 
 @Injectable()
 export class LessonSubmissionService implements ILessonSubmissionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   private readonly submissionIncludeQuery = {
     include: {
@@ -438,6 +444,39 @@ export class LessonSubmissionService implements ILessonSubmissionService {
     };
   }
 
+  private async handleSubmissionNotification(
+    submission: any,
+    userId: string,
+    content: string,
+  ) {
+    try {
+      const lesson = await this.prisma.lesson.findUnique({
+        where: { id: submission.lessonId },
+        select: { title: true },
+      });
+
+      if (!lesson) {
+        console.error(
+          'Lesson not found for notification:',
+          submission.lessonId,
+        );
+        return;
+      }
+
+      this.eventEmitter.emit(SubmissionEventType.SUBMISSION_GRADED, {
+        createdBy: userId, // teacher who graded
+        userId: submission.userId, // student who submitted
+        submissionId: submission.id,
+        lessonTitle: lesson.title,
+        thumbnailUrl: submission.lesson.thumbnailUrl,
+        content,
+        actionUrl: `${config.client_url}/lesson/writing/${submission.lessonId}/result?submissionId=${submission.id}`,
+      });
+    } catch (error) {
+      console.error('Error handling submission notification:', error);
+    }
+  }
+
   async updateWritingSubmission(
     id: string,
     userId: string,
@@ -466,6 +505,15 @@ export class LessonSubmissionService implements ILessonSubmissionService {
         gradedById: userId,
       },
       ...this.submissionIncludeQuery,
+    });
+
+    // Handle notification asynchronously
+    this.handleSubmissionNotification(
+      updatedSubmission,
+      userId,
+      'Giáo viên đã chấm điểm bài nộp của bạn.',
+    ).catch((error) => {
+      console.error('Failed to handle submission notification:', error);
     });
 
     return {

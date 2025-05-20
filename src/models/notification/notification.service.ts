@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { Subject } from 'rxjs';
 import {
@@ -22,6 +22,7 @@ export interface NotificationEvent {
 
 @Injectable()
 export class NotificationService {
+  private readonly logger = new Logger(NotificationService.name);
   private notificationSubject = new Subject<NotificationEvent>();
 
   constructor(private readonly prisma: PrismaService) {}
@@ -35,6 +36,7 @@ export class NotificationService {
     data: CreateNotificationDto,
   ): Promise<string> {
     try {
+      this.logger.log('sendNotification', JSON.stringify(data, null, 2));
       const notification = await this.prisma.notification.create({
         data: {
           userId: data.userId,

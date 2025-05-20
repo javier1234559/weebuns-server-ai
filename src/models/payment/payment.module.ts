@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { PaymentController } from './payment.controller';
-import { ConfigModule } from '@nestjs/config';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-
+import { PaymentEventHandler } from './events/payment.handler';
+import { NotificationModule } from '../notification/notification.module';
 @Module({
-  imports: [ConfigModule, EventEmitterModule.forRoot()],
+  imports: [NotificationModule],
   controllers: [PaymentController],
-  providers: [PaymentService],
+  providers: [PaymentService, PaymentEventHandler],
   exports: [PaymentService],
 })
 export class PaymentModule {}

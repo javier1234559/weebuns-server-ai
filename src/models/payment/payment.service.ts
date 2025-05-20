@@ -15,7 +15,7 @@ import {
 } from './dto/payment-request.dto';
 import { MomoCallbackDto, ZaloCallbackDto } from './dto/payment-callback.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { PaymentCompletedEvent } from './events/payment.events';
+import { PaymentCompletedEvent } from './events/payment.event';
 import { CheckPaymentStatusResponseDto } from 'src/models/payment/dto/payment-response.dto';
 
 @Injectable()

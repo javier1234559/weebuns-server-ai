@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { PaymentCompletedEvent } from '../../payment/events/payment.events';
+import { PaymentCompletedEvent } from './payment.event';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { NotificationService } from '../../notification/notification.service';
 
 @Injectable()
-export class TokenEventHandler {
+export class PaymentEventHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationService: NotificationService,

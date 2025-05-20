@@ -9,6 +9,7 @@ export const MAX_ACCESS_TOKEN_AGE = '3d';
 export const MAX_REFRESH_TOKEN_AGE = '7d';
 
 const config = {
+  client_url: process.env.CLIENT_URL,
   mode: process.env.NODE_ENV,
   port: Number(process.env.PORT) || 8080,
   host: process.env.HOST,

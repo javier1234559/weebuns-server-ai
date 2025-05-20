@@ -463,12 +463,12 @@ export const createVocabularies = (userIds: string[]) => [
 
 export const createComments = (userIds: string[]) => [
   {
-    identifierId: 'writing-all',
+    identifierId: 'writingAll',
     content: 'Bài viết này rất hữu ích, cảm ơn tác giả!',
     userId: userIds[0],
   },
   {
-    identifierId: 'writing-all',
+    identifierId: 'writingAll',
     content: 'Tôi cũng thấy bài viết này rất hay!',
     userId: userIds[0],
     parentId: 'comment-1',

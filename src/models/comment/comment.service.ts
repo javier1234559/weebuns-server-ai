@@ -24,10 +24,15 @@ import {
 } from 'src/common/helper/prisma-queries.helper';
 import { calculatePagination } from 'src/common/utils/pagination';
 import { ReactionType } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { getCommentIdentifierId } from './helper';
 
 @Injectable()
 export class CommentService implements ICommentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   private readonly commentIncludeQuery = {
     include: {
@@ -70,6 +75,65 @@ export class CommentService implements ICommentService {
     };
   }
 
+  private async handleCommentNotification(
+    comment: any,
+    data: CreateCommentDto,
+  ) {
+    try {
+      if (data.parentId) {
+        // Handle reply notification
+        const parentComment = await this.prisma.comment.findUnique({
+          where: { id: data.parentId },
+        });
+
+        if (!parentComment) {
+          console.error(
+            'Parent comment not found for notification:',
+            data.parentId,
+          );
+          return;
+        }
+
+        this.eventEmitter.emit('comment.replied', {
+          createdBy: comment.userId,
+          userId: parentComment.userId,
+          title: 'Bạn có lượt trả lời cho bình luận ' + parentComment.content,
+          content: comment.content,
+          thumbnailUrl: comment.user.profilePicture,
+          actionUrl: ``,
+        });
+      } else {
+        // Handle new comment notification
+        const identifierId = getCommentIdentifierId(data.identifierId);
+        if (identifierId) {
+          const lesson = await this.prisma.lesson.findFirst({
+            where: {
+              id: identifierId,
+              ...notDeletedQuery,
+            },
+          });
+
+          if (!lesson) {
+            console.error('Lesson not found for notification:', identifierId);
+            return;
+          }
+
+          this.eventEmitter.emit('comment.created', {
+            createdBy: comment.userId,
+            userId: lesson.createdById,
+            title: 'Bạn có bình luận mới tại bài học ' + lesson.title,
+            content: comment.content,
+            thumbnailUrl: comment.user.profilePicture,
+            actionUrl: ``,
+          });
+        }
+      }
+    } catch (error) {
+      // Log error but don't throw to prevent affecting comment creation
+      console.error('Error handling comment notification:', error);
+    }
+  }
+
   async create(
     data: CreateCommentDto,
     userId: string,
@@ -82,6 +146,11 @@ export class CommentService implements ICommentService {
         userId,
       },
       ...this.commentIncludeQuery,
+    });
+
+    // Handle notification asynchronously
+    this.handleCommentNotification(comment, data).catch((error) => {
+      console.error('Failed to handle comment notification:', error);
     });
 
     return {

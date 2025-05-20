@@ -8,10 +8,12 @@ import { LoggerMiddleware } from 'src/common/middleware/logger.middleware';
 import { PrismaModule } from 'src/common/prisma/prisma.module';
 import { UploadModule } from 'src/common/upload/upload.module';
 import config, { MAX_AGE } from 'src/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Global()
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [() => config],
