@@ -1,12 +1,11 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { ApiProperty, PartialType, OmitType } from '@nestjs/swagger';
-import { SkillType, UserRole, AuthProvider } from '@prisma/client';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { SkillType, UserRole } from '@prisma/client';
 import { Type, Transform } from 'class-transformer';
 import {
   IsOptional,
   IsString,
   IsNumber,
-  IsDecimal,
   IsDate,
   MaxLength,
   MinLength,
@@ -91,87 +90,55 @@ export class ProfileDto {
 
 @InputType()
 export class CreateUserDto {
-  // validation
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  //docs
   @ApiProperty()
-  // graphql
-  @Field(() => String, { nullable: true })
-  last_name?: string;
-
-  // validation
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  //docs
-  @ApiProperty()
-  // graphql
-  @Field(() => String, { nullable: true })
-  first_name?: string;
-
-  // validation
   @IsString()
   @MinLength(4)
   @MaxLength(20)
-  //docs
-  @ApiProperty()
-  // graphql
   @Field(() => String)
   username: string;
 
-  // validation
-  @IsEmail()
-  //docs
   @ApiProperty()
-  // graphql
+  @IsEmail()
   @Field(() => String)
   email: string;
 
-  // validation
+  @ApiProperty()
   @IsString()
   @MinLength(6)
-  //docs
-  @ApiProperty()
-  // graphql
   @Field(() => String)
   password: string;
 
-  @IsString()
-  //docs
-  @ApiProperty()
-  // graphql
-  @Field(() => String)
-  nativeLanguage: string;
-
-  // validation
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  //docs
-  @ApiProperty()
-  // graphql
+  @MaxLength(50)
   @Field(() => String, { nullable: true })
-  profile_picture?: string;
+  firstName?: string;
 
-  // validation
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  @Field(() => String, { nullable: true })
+  lastName?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @Field(() => String, { nullable: true })
+  profilePicture?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @Field(() => String, { nullable: true })
+  bio?: string;
+
+  @ApiProperty({ enum: UserRole, default: UserRole.user })
   @IsOptional()
   @IsEnum(UserRole)
-  //docs
-  // docs
-  @ApiProperty({ enum: UserRole })
-  // graphql
   @Field(() => UserRole, { nullable: true })
   role?: UserRole;
-
-  // validation
-  @IsOptional()
-  @IsEnum(AuthProvider)
-  // docs
-  @ApiProperty({ enum: AuthProvider })
-  // graphql
-  @Field(() => AuthProvider, { nullable: true })
-  auth_provider?: AuthProvider;
 }
 
 export class CreateTeacherDto {
@@ -223,11 +190,24 @@ export class CreateTeacherDto {
 }
 
 @InputType()
-export class UpdateUserDto extends PartialType(
-  OmitType(CreateUserDto, ['password'] as const),
-) {}
+export class UpdateUserDto extends PartialType(CreateUserDto) {
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  bio?: string;
+}
 
-export class UpdateProfileDto {
+export class UpdateProfileTeacherDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  username?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  email?: string;
+
   @ApiProperty()
   @IsOptional()
   @IsString()
@@ -241,57 +221,38 @@ export class UpdateProfileDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  profilePicture?: string;
-
-  // For Teacher Profile
-  @ApiProperty({ type: [String], enum: SkillType })
-  @IsOptional()
-  specialization?: SkillType[];
+  bio?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  qualification?: string;
+  profilePicture?: string;
+
+  // For Teacher Profile
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  longBio?: string;
 
   @ApiProperty()
   @IsOptional()
-  @IsNumber()
-  teachingExperience?: number;
+  @IsString()
+  introVideoUrlEmbed?: string;
 
   @ApiProperty()
   @IsOptional()
-  @IsDecimal()
-  hourlyRate?: number;
-
-  // For Student Profile
-  @ApiProperty()
-  @IsOptional()
-  @IsNumber()
-  targetStudyDuration?: number;
+  @IsString()
+  certifications?: string;
 
   @ApiProperty()
   @IsOptional()
-  @IsNumber()
-  targetReading?: number;
+  @IsString()
+  teachingExperience?: string;
 
   @ApiProperty()
   @IsOptional()
-  @IsNumber()
-  targetListening?: number;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsNumber()
-  targetWriting?: number;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsNumber()
-  targetSpeaking?: number;
-
-  @ApiProperty()
-  @IsOptional()
-  nextExamDate?: Date;
+  @IsString()
+  other?: string;
 }
 
 @InputType()

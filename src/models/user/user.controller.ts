@@ -15,7 +15,13 @@ import { AuthGuard } from 'src/common/auth/auth.guard';
 import { RolesGuard } from 'src/common/auth/role.guard';
 import { Roles, UserRole } from 'src/common/decorators/role.decorator';
 import { UserResponse } from './dto/auth-response.dto';
-import { TeacherDto, ProfileDto } from './dto/user-request.dto';
+import {
+  TeacherDto,
+  ProfileDto,
+  UpdateUserDto,
+  UpdateProfileTeacherDto,
+  CreateUserDto,
+} from './dto/user-request.dto';
 import {
   DeleteUserResponse,
   FindAllUserQuery,
@@ -59,6 +65,16 @@ export class UserController {
     return this.userService.findByUsername(username);
   }
 
+  @Post()
+  @Roles(UserRole.ADMIN)
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    type: UserResponse,
+  })
+  createUser(@Body() createUserDto: CreateUserDto): Promise<UserResponse> {
+    return this.userService.createUser(createUserDto);
+  }
+
   @Post('teachers')
   @Roles(UserRole.ADMIN)
   @ApiResponse({
@@ -90,7 +106,7 @@ export class UserController {
   })
   updateTeacherProfile(
     @Param('id') id: string,
-    @Body() profileDto: ProfileDto,
+    @Body() profileDto: UpdateProfileTeacherDto,
   ): Promise<UserResponse> {
     return this.userService.updateProfileTeacher(id, profileDto);
   }
@@ -116,5 +132,18 @@ export class UserController {
   })
   remove(@Param('id') id: string): Promise<DeleteUserResponse> {
     return this.userService.remove(id);
+  }
+
+  @Patch(':id')
+  @Roles(UserRole.USER, UserRole.TEACHER, UserRole.ADMIN)
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: UserResponse,
+  })
+  updateUser(
+    @Param('id') id: string,
+    @Body() data: UpdateUserDto,
+  ): Promise<UserResponse> {
+    return this.userService.updateUser(id, data);
   }
 }

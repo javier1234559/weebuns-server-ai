@@ -10,9 +10,9 @@ import {
 import { PaginationInputDto } from 'src/common/dto/pagination.dto';
 
 export class CreateNotificationDto {
-  @ApiProperty()
-  @IsString()
-  userId: string;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  userId?: string;
 
   @ApiProperty({ enum: NotificationType })
   @IsEnum(NotificationType)

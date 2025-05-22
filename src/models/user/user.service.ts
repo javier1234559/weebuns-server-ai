@@ -19,6 +19,9 @@ import {
   ProfileDto,
   TeacherDto,
   UpdateProfileUserDto,
+  UpdateProfileTeacherDto,
+  UpdateUserDto,
+  CreateUserDto,
 } from 'src/models/user/dto/user-request.dto';
 import {
   DeleteUserResponse,
@@ -42,6 +45,69 @@ export class UserService implements UserServiceInterface {
   private transformUserResponse(user: any): Omit<User, 'passwordHash'> {
     const { passwordHash, ...userWithoutPassword } = user;
     return userWithoutPassword;
+  }
+
+  async createUser(data: CreateUserDto): Promise<UserResponse> {
+    const { password, ...userData } = data;
+
+    // Check if user already exists
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: userData.email }, { username: userData.username }],
+        ...notDeletedQuery,
+      },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Email or username already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    let buildProfile = {};
+
+    if (userData.role === UserRole.teacher) {
+      buildProfile = {
+        teacherProfile: {
+          create: {
+            longBio: '',
+            introVideoUrlEmbed: '',
+            certifications: '',
+            teachingExperience: '',
+            other: '',
+          },
+        },
+      };
+    } else if (userData.role === UserRole.user) {
+      buildProfile = {
+        studentProfile: {
+          create: {
+            targetStudyDuration: 0,
+            targetReading: 0,
+            targetListening: 0,
+            targetWriting: 0,
+            targetSpeaking: 0,
+            nextExamDate: null,
+          },
+        },
+      };
+    }
+
+    // Create new user
+    const newUser = await this.prisma.user.create({
+      data: {
+        ...userData,
+        passwordHash: hashedPassword,
+        role: userData.role || UserRole.user,
+        authProvider: AuthProvider.local,
+        isEmailVerified: true, // admin created user
+        ...buildProfile,
+      },
+      ...this.userIncludeQuery,
+    });
+
+    return { user: this.transformUserResponse(newUser) };
   }
 
   async findAll(findAllUsersDto: FindAllUserQuery): Promise<UsersResponse> {
@@ -232,7 +298,7 @@ export class UserService implements UserServiceInterface {
 
   async updateProfileTeacher(
     userId: string,
-    data: ProfileDto,
+    data: UpdateProfileTeacherDto,
   ): Promise<UserResponse> {
     const user = await this.prisma.user.findFirst({
       where: {
@@ -248,18 +314,28 @@ export class UserService implements UserServiceInterface {
     }
 
     const {
+      username,
+      email,
+      firstName,
+      lastName,
+      bio,
+      profilePicture,
       longBio,
       introVideoUrlEmbed,
       certifications,
       teachingExperience,
       other,
-      ...basicData
     } = data;
 
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        ...basicData,
+        username,
+        email,
+        firstName,
+        lastName,
+        bio,
+        profilePicture,
         teacherProfile: user.teacherProfile
           ? {
               update: {
@@ -348,20 +424,59 @@ export class UserService implements UserServiceInterface {
   async remove(id: string): Promise<DeleteUserResponse> {
     const user = await this.prisma.user.findFirst({
       where: { id, ...notDeletedQuery },
+      include: {
+        teacherProfile: true,
+        studentProfile: true,
+        lessons: true,
+        submissions: true,
+        gradedSubmissions: true,
+        vocabularies: true,
+        comments: true,
+        reactions: true,
+        notifications: true,
+        createdNotifications: true,
+        VocabularyPractice: true,
+        StudyActivity: true,
+        TokenWallet: true,
+        Transaction: true,
+      },
     });
 
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    await this.prisma.user.update({
-      where: { id },
-      data: {
-        ...softDeleteQuery,
-      },
-    });
+    // Check if user has any relations
+    const hasRelations =
+      user.lessons.length > 0 ||
+      user.submissions.length > 0 ||
+      user.gradedSubmissions.length > 0 ||
+      user.vocabularies.length > 0 ||
+      user.comments.length > 0 ||
+      user.reactions.length > 0 ||
+      user.notifications.length > 0 ||
+      user.createdNotifications.length > 0 ||
+      user.VocabularyPractice.length > 0 ||
+      user.StudyActivity.length > 0 ||
+      user.TokenWallet !== null ||
+      user.Transaction.length > 0;
 
-    return { message: 'User deleted successfully' };
+    if (hasRelations) {
+      // Soft delete if user has relations
+      await this.prisma.user.update({
+        where: { id },
+        data: {
+          ...softDeleteQuery,
+        },
+      });
+      return { message: 'User soft deleted successfully' };
+    } else {
+      // Hard delete if no relations
+      await this.prisma.user.delete({
+        where: { id },
+      });
+      return { message: 'User permanently deleted successfully' };
+    }
   }
 
   async updateProfile(
@@ -390,5 +505,30 @@ export class UserService implements UserServiceInterface {
 
     const { passwordHash, ...userWithoutPassword } = updatedUser;
     return { user: userWithoutPassword };
+  }
+
+  async updateUser(userId: string, data: UpdateUserDto): Promise<UserResponse> {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, ...notDeletedQuery },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        username: data.username,
+        profilePicture: data.profilePicture,
+        bio: data.bio,
+      },
+      ...this.userIncludeQuery,
+    });
+
+    return { user: this.transformUserResponse(updatedUser) };
   }
 }

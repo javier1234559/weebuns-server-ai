@@ -9,6 +9,7 @@ import { VocabularyModule } from 'src/models/vocabulary/vocabulary.module';
 import { TokenModule } from 'src/models/token/token.module';
 import { PaymentModule } from 'src/models/payment/payment.module';
 import { NotificationModule } from 'src/models/notification/notification.module';
+import { StudyActivityModule } from './models/study-activity/study-activity.module';
 @Module({
   imports: [
     AiModule,
@@ -21,6 +22,7 @@ import { NotificationModule } from 'src/models/notification/notification.module'
     PaymentModule,
     TokenModule,
     NotificationModule,
+    StudyActivityModule,
   ],
   controllers: [],
   providers: [],

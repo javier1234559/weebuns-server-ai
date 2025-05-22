@@ -9,9 +9,9 @@ import { NotificationType } from '@prisma/client';
 import { paginationQuery } from 'src/common/helper/prisma-queries.helper';
 import { calculatePagination } from 'src/common/utils/pagination';
 import { NotificationResponse } from './dto/notification-response.dto';
-
+import { INotificationService } from './interface/notification-service.interface';
 export interface NotificationEvent {
-  userId: string;
+  userId?: string;
   type: NotificationType;
   title: string;
   content: string;
@@ -21,7 +21,7 @@ export interface NotificationEvent {
 }
 
 @Injectable()
-export class NotificationService {
+export class NotificationService implements INotificationService {
   private readonly logger = new Logger(NotificationService.name);
   private notificationSubject = new Subject<NotificationEvent>();
 
@@ -51,6 +51,9 @@ export class NotificationService {
         },
       });
 
+      if (data.isGlobal) {
+        return 'Notification sent successfully to all users without realtime notification';
+      }
       // Emit event to SSE stream
       this.notificationSubject.next({
         userId: data.userId,

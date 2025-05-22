@@ -245,6 +245,16 @@ export class AuthService implements AuthServiceInterface {
           role: UserRole.user,
           authProvider: AuthProvider.local,
           bio: '',
+          studentProfile: {
+            create: {
+              targetStudyDuration: 0,
+              targetReading: 0,
+              targetListening: 0,
+              targetWriting: 0,
+              targetSpeaking: 0,
+              nextExamDate: null,
+            },
+          },
         },
         include: this.includeProfiles,
       });
@@ -379,6 +389,16 @@ export class AuthService implements AuthServiceInterface {
           profilePicture: userData.picture,
           passwordHash: '', // Add required passwordHash field
           isEmailVerified: true, // Since this is OAuth login
+          studentProfile: {
+            create: {
+              targetStudyDuration: 0,
+              targetReading: 0,
+              targetListening: 0,
+              targetWriting: 0,
+              targetSpeaking: 0,
+              nextExamDate: null,
+            },
+          },
         },
         include: this.includeProfiles,
       });
