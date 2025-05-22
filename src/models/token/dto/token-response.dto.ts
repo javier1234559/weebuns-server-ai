@@ -3,6 +3,7 @@ import { PaginationOutputDto } from 'src/common/dto/pagination.dto';
 import { TokenWallet } from '../entities/token-wallet.entity';
 import { TokenPackage } from '../entities/token-package.entity';
 import { Transaction } from '../entities/transaction.entity';
+import { User } from 'src/models/user/entities/user.entity';
 
 export class TokenWalletResponse {
   @ApiProperty({ type: TokenWallet })
@@ -30,4 +31,12 @@ export class TransactionsResponse {
 export class PaymentUrlResponse {
   @ApiProperty()
   paymentUrl: string;
+}
+
+export class TransactionWithUserResponse {
+  @ApiProperty({ type: Transaction })
+  transaction: Transaction;
+
+  @ApiProperty({ type: User })
+  user: User;
 }

@@ -160,4 +160,26 @@ export class LessonSubmissionController {
       dto,
     );
   }
+
+  @Post('writing/claim/:id')
+  @Roles(UserRole.TEACHER)
+  @ApiResponse({ status: 200, type: WritingSubmissionResponse })
+  claimSubmission(
+    @Param('id') id: string,
+    @CurrentUser() user: IAuthPayload,
+  ): Promise<WritingSubmissionResponse> {
+    const userId = String(user.sub);
+    return this.lessonSubmissionService.claimSubmission(userId, id);
+  }
+
+  @Post('writing/cancel-claim/:id')
+  @Roles(UserRole.TEACHER)
+  @ApiResponse({ status: 200, type: WritingSubmissionResponse })
+  cancelClaimSubmission(
+    @Param('id') id: string,
+    @CurrentUser() user: IAuthPayload,
+  ): Promise<WritingSubmissionResponse> {
+    const userId = String(user.sub);
+    return this.lessonSubmissionService.cancelClaimSubmission(userId, id);
+  }
 }

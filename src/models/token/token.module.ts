@@ -7,5 +7,6 @@ import { PaymentModule } from '../payment/payment.module';
   imports: [PaymentModule],
   controllers: [TokenController],
   providers: [TokenService],
+  exports: [TokenService],
 })
 export class TokenModule {}

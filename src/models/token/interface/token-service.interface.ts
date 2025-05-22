@@ -1,7 +1,9 @@
 import {
   CreateTransactionDto,
+  EarnTokensDto,
   FindAllTransactionsQuery,
   UseTokensDto,
+  WithdrawTokensDto,
 } from '../dto/token-request.dto';
 import {
   PaymentUrlResponse,
@@ -26,4 +28,17 @@ export interface ITokenService {
     query: FindAllTransactionsQuery,
   ): Promise<TransactionsResponse>;
   useTokens(userId: string, data: UseTokensDto): Promise<TransactionResponse>;
+  earnTokens(userId: string, data: EarnTokensDto): Promise<TransactionResponse>;
+
+  withdrawTokens(
+    userId: string,
+    data: WithdrawTokensDto,
+  ): Promise<TransactionResponse>;
+
+  getWithdrawalRequests(
+    query: FindAllTransactionsQuery,
+  ): Promise<TransactionsResponse>;
+
+  getWithdrawalRequestDetails(requestId: string): Promise<TransactionResponse>;
+  approveWithdrawalRequest(requestId: string): Promise<TransactionResponse>;
 }

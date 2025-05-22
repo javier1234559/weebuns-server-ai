@@ -58,6 +58,16 @@ export interface ILessonSubmissionService {
     userId: string,
     dto: CreateWritingSubmissionDTO,
   ): Promise<WritingSubmissionResponse>;
+  //claim submission
+  claimSubmission(
+    teacherId: string,
+    submissionId: string,
+  ): Promise<WritingSubmissionResponse>;
+  cancelClaimSubmission(
+    teacherId: string,
+    submissionId: string,
+  ): Promise<WritingSubmissionResponse>;
+
   updateWritingSubmission(
     id: string,
     userId: string,

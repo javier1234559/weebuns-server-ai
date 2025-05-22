@@ -64,3 +64,22 @@ export class FindAllTransactionsQuery extends PaginationInputDto {
   @IsOptional()
   to?: string;
 }
+
+export class EarnTokensDto {
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  tokenAmount: number;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  reason?: string;
+}
+
+export class WithdrawTokensDto {
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  tokenAmount: number;
+}

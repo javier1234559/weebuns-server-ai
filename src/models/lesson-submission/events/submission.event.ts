@@ -1,5 +1,6 @@
 export enum SubmissionEventType {
   SUBMISSION_GRADED = 'submission.graded',
+  SUBMISSION_CLAIMED = 'submission.claimed',
 }
 
 export class SubmissionGradedEvent {
@@ -11,5 +12,12 @@ export class SubmissionGradedEvent {
     public readonly content: string,
     public readonly thumbnailUrl?: string,
     public readonly actionUrl?: string,
+  ) {}
+}
+
+export class SubmissionClaimedEvent {
+  constructor(
+    public readonly tokenUsed: number,
+    public readonly teacherId: string,
   ) {}
 }

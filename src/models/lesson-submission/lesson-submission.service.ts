@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { ILessonSubmissionService } from './interface/lesson-submission-service.interface';
 import {
@@ -239,7 +243,7 @@ export class LessonSubmissionService implements ILessonSubmissionService {
         lessonId: dto.lessonId,
         userId: userId,
         submissionType: 'reading' as SkillType,
-        status: SubmissionStatus.completed,
+        status: SubmissionStatus.submitted,
         tokensUsed: dto.tokensUsed,
         content: serializeJSON(dto.content),
         feedback: serializeJSON(feedback),
@@ -308,7 +312,7 @@ export class LessonSubmissionService implements ILessonSubmissionService {
         lessonId: dto.lessonId,
         userId: userId,
         submissionType: 'listening' as SkillType,
-        status: SubmissionStatus.completed,
+        status: SubmissionStatus.submitted,
         tokensUsed: dto.tokensUsed,
         content: serializeJSON(dto.content),
         feedback: serializeJSON(feedback),
@@ -361,7 +365,7 @@ export class LessonSubmissionService implements ILessonSubmissionService {
         lessonId: dto.lessonId,
         userId: userId,
         submissionType: 'speaking' as SkillType,
-        status: SubmissionStatus.completed,
+        status: SubmissionStatus.submitted,
         tokensUsed: dto.tokensUsed,
         content: serializeJSON(dto.content),
         submittedAt: new Date(),
@@ -494,6 +498,8 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       throw new NotFoundException(`Writing submission with ID ${id} not found`);
     }
 
+    const tokenUsed = submission.tokensUsed;
+
     const updatedSubmission = await this.prisma.lessonSubmission.update({
       where: { id },
       data: {
@@ -503,6 +509,7 @@ export class LessonSubmissionService implements ILessonSubmissionService {
         status: SubmissionStatus.scored,
         gradedAt: new Date(),
         gradedById: userId,
+        tokensUsed: 0, // Burn tokens by setting to 0
       },
       ...this.submissionIncludeQuery,
     });
@@ -516,11 +523,92 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       console.error('Failed to handle submission notification:', error);
     });
 
+    this.eventEmitter.emit(SubmissionEventType.SUBMISSION_CLAIMED, {
+      teacherId: updatedSubmission.gradedById,
+      tokenUsed: tokenUsed, // Pass the original token value
+    });
+
     return {
       data: {
         ...updatedSubmission,
         content: this.transformContent(updatedSubmission.content, 'writing'),
         feedback: this.transformFeedback(updatedSubmission.feedback, 'writing'),
+      } as WritingSubmission,
+    };
+  }
+
+  async claimSubmission(
+    teacherId: string,
+    submissionId: string,
+  ): Promise<WritingSubmissionResponse> {
+    const submission = await this.prisma.lessonSubmission.findFirst({
+      where: {
+        id: submissionId,
+        ...notDeletedQuery,
+      },
+    });
+
+    if (!submission) {
+      throw new NotFoundException(
+        `Writing submission with ID ${submissionId} not found`,
+      );
+    }
+
+    if (submission.gradedById && submission.status === SubmissionStatus.taken) {
+      throw new ConflictException(
+        'Submission has been claimed by another teacher',
+      );
+    }
+
+    await this.prisma.lessonSubmission.update({
+      where: { id: submissionId },
+      data: {
+        status: SubmissionStatus.taken,
+        gradedById: teacherId,
+      },
+    });
+
+    return {
+      data: {
+        ...submission,
+        content: this.transformContent(submission.content, 'writing'),
+        feedback: this.transformFeedback(submission.feedback, 'writing'),
+      } as WritingSubmission,
+    };
+  }
+
+  async cancelClaimSubmission(
+    teacherId: string,
+    submissionId: string,
+  ): Promise<WritingSubmissionResponse> {
+    const submission = await this.prisma.lessonSubmission.findFirst({
+      where: {
+        id: submissionId,
+        status: SubmissionStatus.taken,
+        gradedById: teacherId,
+        ...notDeletedQuery,
+      },
+    });
+
+    if (!submission) {
+      throw new NotFoundException(
+        `Writing submission with ID ${submissionId} not found`,
+      );
+    }
+
+    await this.prisma.lessonSubmission.update({
+      where: { id: submissionId },
+      data: {
+        status: SubmissionStatus.submitted,
+        gradedById: null,
+      },
+    });
+
+    return {
+      data: {
+        ...submission,
+        content: this.transformContent(submission.content, 'writing'),
+        feedback: this.transformFeedback(submission.feedback, 'writing'),
       } as WritingSubmission,
     };
   }

@@ -61,6 +61,8 @@ export enum PaymentStatus {
 }
 
 export enum TransactionType {
-  TOKEN_PURCHASE = 'token_purchase',
-  TOKEN_USE = 'token_use',
+  TOKEN_PURCHASE = 'TOKEN_PURCHASE',
+  TOKEN_USE = 'TOKEN_USE',
+  TOKEN_EARN = 'TOKEN_EARN',
+  TOKEN_WITHDRAW = 'TOKEN_WITHDRAW',
 }

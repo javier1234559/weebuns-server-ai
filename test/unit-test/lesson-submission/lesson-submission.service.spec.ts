@@ -67,7 +67,7 @@ describe('LessonSubmissionService', () => {
     userId: 'user-1',
     lessonId: 'lesson-1',
     submissionType: SkillType.reading,
-    status: SubmissionStatus.completed,
+    status: SubmissionStatus.submitted,
     content: serializeJSON({
       text: 'Sample reading text',
       questions: [mockQuestion],
@@ -122,7 +122,7 @@ describe('LessonSubmissionService', () => {
         userId: 'user-1',
         lessonId: 'lesson-1',
         submissionType: SkillType.reading,
-        status: SubmissionStatus.completed,
+        status: SubmissionStatus.submitted,
         search: 'test',
       };
 
@@ -147,7 +147,7 @@ describe('LessonSubmissionService', () => {
         page: 1,
         perPage: 10,
         submissionType: SkillType.reading,
-        status: SubmissionStatus.completed,
+        status: SubmissionStatus.submitted,
         search: 'test',
       };
 

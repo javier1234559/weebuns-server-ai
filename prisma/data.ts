@@ -10,6 +10,7 @@ import {
   PaymentType,
   PaymentStatus,
 } from '@prisma/client';
+import { TransactionType } from 'src/common/enum/common';
 
 export interface GeneratedIds {
   users: string[];
@@ -589,5 +590,5 @@ export const createTransaction = (userIds: string[], packageId: string) => ({
   transactionId: 'test-transaction-1',
   status: PaymentStatus.completed,
   paymentDate: new Date(),
-  type: 'token_purchase',
+  type: TransactionType.TOKEN_PURCHASE,
 });

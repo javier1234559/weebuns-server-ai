@@ -1,10 +1,19 @@
-import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  UseGuards,
+  Param,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { TokenService } from './token.service';
 import {
   CreateTransactionDto,
   FindAllTransactionsQuery,
   UseTokensDto,
+  WithdrawTokensDto,
 } from './dto/token-request.dto';
 import {
   TokenWalletResponse,
@@ -12,6 +21,7 @@ import {
   TransactionResponse,
   TransactionsResponse,
   PaymentUrlResponse,
+  TransactionWithUserResponse,
 } from './dto/token-response.dto';
 import { AuthGuard } from 'src/common/auth/auth.guard';
 import { RolesGuard } from 'src/common/auth/role.guard';
@@ -97,5 +107,50 @@ export class TokenController {
   useTokens(@CurrentUser() user: IAuthPayload, @Body() data: UseTokensDto) {
     const userId = String(user.sub);
     return this.tokenService.useTokens(userId, data);
+  }
+
+  @Post('withdraw')
+  @Roles(UserRole.TEACHER)
+  @ApiResponse({
+    status: 200,
+    type: TransactionResponse,
+  })
+  withdrawTokens(
+    @CurrentUser() user: IAuthPayload,
+    @Body() data: WithdrawTokensDto,
+  ) {
+    const userId = String(user.sub);
+    return this.tokenService.withdrawTokens(userId, data);
+  }
+
+  @Get('withdrawal-requests')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  @ApiQuery({ type: FindAllTransactionsQuery })
+  @ApiResponse({
+    status: 200,
+    type: TransactionsResponse,
+  })
+  getWithdrawalRequests(@Query() query: FindAllTransactionsQuery) {
+    return this.tokenService.getWithdrawalRequests(query);
+  }
+
+  @Get('withdrawal-requests/:requestId')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  @ApiResponse({
+    status: 200,
+    type: TransactionWithUserResponse,
+  })
+  getWithdrawalRequestDetails(@Param('requestId') requestId: string) {
+    return this.tokenService.getWithdrawalRequestDetails(requestId);
+  }
+
+  @Post('withdrawal-requests/:requestId/approve')
+  @Roles(UserRole.ADMIN)
+  @ApiResponse({
+    status: 200,
+    type: TransactionResponse,
+  })
+  approveWithdrawalRequest(@Param('requestId') requestId: string) {
+    return this.tokenService.approveWithdrawalRequest(requestId);
   }
 }

@@ -9,6 +9,8 @@ import {
   CreateTransactionDto,
   FindAllTransactionsQuery,
   UseTokensDto,
+  EarnTokensDto,
+  WithdrawTokensDto,
 } from './dto/token-request.dto';
 import { paginationQuery } from 'src/common/helper/prisma-queries.helper';
 import { PaymentStatus, PaymentType } from '@prisma/client';
@@ -19,6 +21,7 @@ import {
   PaymentUrlResponse,
   TransactionResponse,
   TransactionsResponse,
+  TransactionWithUserResponse,
 } from './dto/token-response.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { TransactionType } from 'src/common/enum/common';
@@ -198,6 +201,31 @@ export class TokenService implements ITokenService {
     return { transaction };
   }
 
+  async earnTokens(
+    userId: string,
+    data: EarnTokensDto,
+  ): Promise<TransactionResponse> {
+    const { tokenAmount, reason } = data;
+
+    const transaction = await this.prisma.transaction.create({
+      data: {
+        transactionId: uuidv4(),
+        user: { connect: { id: userId } },
+        amount: 0,
+        tokenAmount: tokenAmount,
+        paymentType: PaymentType.internal,
+        status: PaymentStatus.completed,
+        paymentDate: new Date(),
+        type: TransactionType.TOKEN_EARN,
+        reason,
+      },
+    });
+
+    await this.updateWalletBalance(userId, tokenAmount);
+
+    return { transaction };
+  }
+
   private async updateWalletBalance(userId: string, amount: number) {
     await this.prisma.tokenWallet.upsert({
       where: { userId },
@@ -211,5 +239,111 @@ export class TokenService implements ITokenService {
         },
       },
     });
+  }
+
+  async withdrawTokens(
+    userId: string,
+    data: WithdrawTokensDto,
+  ): Promise<TransactionResponse> {
+    const { tokenAmount } = data;
+
+    const walletResponse = await this.getWallet(userId);
+
+    if (walletResponse.wallet.balance < tokenAmount) {
+      throw new BadRequestException('Insufficient token balance');
+    }
+
+    const transaction = await this.prisma.transaction.create({
+      data: {
+        transactionId: uuidv4(),
+        user: { connect: { id: userId } },
+        amount: 0,
+        tokenAmount: -tokenAmount,
+        paymentType: PaymentType.internal,
+        status: PaymentStatus.pending,
+        paymentDate: new Date(),
+        type: TransactionType.TOKEN_WITHDRAW,
+      },
+    });
+
+    return { transaction };
+  }
+
+  async getWithdrawalRequests(
+    query: FindAllTransactionsQuery,
+  ): Promise<TransactionsResponse> {
+    const {
+      page,
+      perPage,
+      status,
+      type = TransactionType.TOKEN_WITHDRAW,
+      from,
+      to,
+    } = query;
+
+    const where = {
+      ...(status && { status }),
+      ...(type && { type }),
+      ...(from &&
+        to && {
+          paymentDate: {
+            gte: new Date(from),
+            lte: new Date(to),
+          },
+        }),
+    };
+
+    const [transactions, totalItems] = await Promise.all([
+      this.prisma.transaction.findMany({
+        where,
+        ...paginationQuery(page, perPage),
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.transaction.count({ where }),
+    ]);
+
+    return {
+      data: transactions,
+      pagination: calculatePagination(totalItems, query),
+    };
+  }
+
+  async getWithdrawalRequestDetails(
+    requestId: string,
+  ): Promise<TransactionWithUserResponse> {
+    const transaction = await this.prisma.transaction.findUnique({
+      where: { id: requestId },
+    });
+
+    if (!transaction) {
+      throw new NotFoundException('Withdrawal request not found');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: transaction.userId },
+      include: {
+        teacherProfile: true,
+        studentProfile: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return { transaction, user };
+  }
+
+  async approveWithdrawalRequest(
+    requestId: string,
+  ): Promise<TransactionResponse> {
+    const transaction = await this.prisma.transaction.update({
+      where: { id: requestId },
+      data: { status: PaymentStatus.completed },
+    });
+
+    await this.updateWalletBalance(transaction.userId, transaction.tokenAmount); // this already in negative
+
+    return { transaction };
   }
 }

@@ -3,10 +3,14 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { NotificationService } from 'src/models/notification/notification.service';
 import { SubmissionEventType, SubmissionGradedEvent } from './submission.event';
 import { NotificationType } from '@prisma/client';
+import { TokenService } from 'src/models/token/token.service';
 
 @Injectable()
 export class SubmissionEventHandler {
-  constructor(private readonly notificationService: NotificationService) {}
+  constructor(
+    private readonly notificationService: NotificationService,
+    private readonly tokenService: TokenService,
+  ) {}
 
   @OnEvent(SubmissionEventType.SUBMISSION_GRADED)
   async handleSubmissionGraded(payload: SubmissionGradedEvent) {
@@ -18,5 +22,18 @@ export class SubmissionEventHandler {
       thumbnailUrl: payload.thumbnailUrl,
       actionUrl: payload.actionUrl,
     });
+  }
+
+  @OnEvent(SubmissionEventType.SUBMISSION_CLAIMED)
+  async handleSubmissionClaimed(payload: {
+    teacherId: string;
+    tokenUsed: number;
+  }) {
+    if (payload.tokenUsed > 0) {
+      await this.tokenService.earnTokens(payload.teacherId, {
+        tokenAmount: payload.tokenUsed,
+        reason: 'Earned tokens from grading submission',
+      });
+    }
   }
 }
