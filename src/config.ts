@@ -12,7 +12,7 @@ const config = {
   client_url: process.env.CLIENT_URL,
   mode: process.env.NODE_ENV,
   port: Number(process.env.PORT) || 8080,
-  host: process.env.HOST,
+  host: process.env.HOST || 'localhost',
   // Database configuration
   database: process.env.DATABASE_URL,
   // JWT configuration
