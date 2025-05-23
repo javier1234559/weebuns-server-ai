@@ -10,8 +10,10 @@ import { TokenModule } from 'src/models/token/token.module';
 import { PaymentModule } from 'src/models/payment/payment.module';
 import { NotificationModule } from 'src/models/notification/notification.module';
 import { StudyActivityModule } from './models/study-activity/study-activity.module';
+import { HealthModule } from './common/health/health.module';
 @Module({
   imports: [
+    HealthModule,
     AiModule,
     UserModule,
     CommonModule,
