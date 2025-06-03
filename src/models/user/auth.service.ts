@@ -374,6 +374,7 @@ export class AuthService implements AuthServiceInterface {
   }) {
     let user = await this.prisma.user.findUnique({
       where: { email: userData.email },
+      include: this.includeProfiles,
     });
 
     if (!user) {

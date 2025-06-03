@@ -26,7 +26,7 @@ export class PaymentController {
     @Param('provider') provider: PaymentType,
     @Body() payload: MomoCallbackDto | ZaloCallbackDto,
   ) {
-    console.log('provider', provider);
+    console.log('call back successfully from - ', provider);
     console.log(JSON.stringify(payload, null, 2));
     return this.paymentService.handleCallback(provider, payload);
   }
