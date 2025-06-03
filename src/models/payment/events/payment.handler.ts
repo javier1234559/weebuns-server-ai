@@ -15,7 +15,7 @@ export class PaymentEventHandler {
 
   @OnEvent('payment.completed')
   async handlePaymentCompleted(event: PaymentCompletedEvent) {
-    const { transactionId } = event;
+    const { transactionId, status } = event;
 
     this.logger.log('Start Update payment status from event');
     this.logger.log(JSON.stringify(event, null, 2));
