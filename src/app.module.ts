@@ -11,6 +11,7 @@ import { PaymentModule } from 'src/models/payment/payment.module';
 import { NotificationModule } from 'src/models/notification/notification.module';
 import { StudyActivityModule } from './models/study-activity/study-activity.module';
 import { HealthModule } from './common/health/health.module';
+import { BannerModule } from './models/banner/banner.module';
 @Module({
   imports: [
     HealthModule,
@@ -25,6 +26,7 @@ import { HealthModule } from './common/health/health.module';
     TokenModule,
     NotificationModule,
     StudyActivityModule,
+    BannerModule,
   ],
   controllers: [],
   providers: [],

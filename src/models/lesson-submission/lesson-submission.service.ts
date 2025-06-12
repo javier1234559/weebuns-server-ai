@@ -13,6 +13,7 @@ import {
   FindAllLessonSubmissionQuery,
   UpdateWritingSubmissionDTO,
   FindAllReadingSubmissionsByUserQuery,
+  UpdateSpeakingSubmissionDTO,
 } from './dto/lesson-submission-request.dto';
 import {
   DeleteLessonSubmissionResponse,
@@ -429,7 +430,7 @@ export class LessonSubmissionService implements ILessonSubmissionService {
         lessonId: dto.lessonId,
         userId: userId,
         submissionType: 'writing' as SkillType,
-        status: SubmissionStatus.submitted,
+        status: dto.status,
         tokensUsed: dto.tokensUsed,
         content: serializeJSON(dto.content),
         submittedAt: new Date(),
@@ -610,6 +611,45 @@ export class LessonSubmissionService implements ILessonSubmissionService {
         content: this.transformContent(submission.content, 'writing'),
         feedback: this.transformFeedback(submission.feedback, 'writing'),
       } as WritingSubmission,
+    };
+  }
+
+  async updateSpeakingSubmission(
+    submissionId: string,
+    userId: string,
+    dto: UpdateSpeakingSubmissionDTO,
+  ): Promise<SpeakingSubmissionResponse> {
+    const submission = await this.prisma.lessonSubmission.findFirst({
+      where: {
+        id: submissionId,
+        userId,
+        submissionType: 'speaking' as SkillType,
+        ...notDeletedQuery,
+      },
+    });
+
+    if (!submission) {
+      throw new NotFoundException(
+        `Speaking submission with ID ${submissionId} not found`,
+      );
+    }
+
+    const updatedSubmission = await this.prisma.lessonSubmission.update({
+      where: { id: submissionId },
+      data: {
+        status: dto.status,
+        tokensUsed: dto.tokensUsed,
+        content: serializeJSON(dto.content),
+        submittedAt: new Date(),
+      },
+      ...this.submissionIncludeQuery,
+    });
+
+    return {
+      data: {
+        ...updatedSubmission,
+        content: this.transformContent(updatedSubmission.content, 'speaking'),
+      } as SpeakingSubmission,
     };
   }
 }

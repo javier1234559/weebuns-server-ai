@@ -16,6 +16,7 @@ import {
   UpdateListeningDTO,
   UpdateSpeakingDTO,
   UpdateWritingDTO,
+  UpdateLessonDTO,
 } from './dto/lesson-request.dto';
 import {
   LessonsResponse,
@@ -24,6 +25,7 @@ import {
   ListeningResponse,
   SpeakingResponse,
   WritingResponse,
+  BaseLessonResponse,
 } from './dto/lesson-response.dto';
 import { ILessonService } from './interface/lesson-service.interface';
 import { Prisma, SkillType } from '@prisma/client';
@@ -100,6 +102,28 @@ export class LessonService implements ILessonService {
     return {
       data: lessons,
       pagination: calculatePagination(totalItems, query),
+    };
+  }
+
+  async updateLesson(
+    id: string,
+    dto: UpdateLessonDTO,
+  ): Promise<BaseLessonResponse> {
+    const lesson = await this.prisma.lesson.findFirst({
+      where: { id, ...notDeletedQuery },
+    });
+
+    if (!lesson) {
+      throw new NotFoundException(`Lesson with ID ${id} not found`);
+    }
+
+    const updatedLesson = await this.prisma.lesson.update({
+      where: { id },
+      data: dto,
+    });
+
+    return {
+      data: updatedLesson,
     };
   }
 

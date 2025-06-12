@@ -40,4 +40,6 @@ export interface AiServiceInterface {
   recommendAnswer(
     payload: RecommendAnswerDto,
   ): Promise<RecommendAnswerResponseDto>;
+  checkSpeakingSession(sessionId: string): Promise<CheckSessionResponseDto>;
+  clearSpeakingSession(sessionId: string): Promise<{ message: string }>;
 }

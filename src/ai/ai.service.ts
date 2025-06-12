@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject } from '@nestjs/common';
@@ -31,12 +31,17 @@ import {
   RecommendAnswerResponseDto,
   CheckSessionResponseDto,
 } from './dto/ai-response';
+import { PrismaService } from '../common/prisma/prisma.service';
+import { serializeJSON } from '../common/utils/format';
+import { SubmissionStatus } from '@prisma/client';
+import { notDeletedQuery } from '../common/helper/prisma-queries.helper';
 
 @Injectable()
 export class AiService implements AiServiceInterface {
+  private logger = new Logger(AiService.name);
   private groq: Groq;
   private readonly modelName = 'llama3-8b-8192';
-  private readonly geminiModelName = 'gemini-2.0-flash';
+  private readonly geminiModelName = 'gemini-1.5-flash';
   private geminiModel: any;
   private readonly CACHE_TTL = 30 * 60; // 30 minutes in seconds
   private readonly MAX_HISTORY_LENGTH = 10; // Maximum number of messages to keep in history
@@ -45,6 +50,7 @@ export class AiService implements AiServiceInterface {
   constructor(
     private configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private prisma: PrismaService,
   ) {
     // Initialize Groq
     this.groq = new Groq({
@@ -79,14 +85,53 @@ ${dto.backgroundKnowledge ? `\nBackground knowledge to consider: ${dto.backgroun
     await this.cacheManager.set(
       `speaking:${sessionId}`,
       data,
-      this.CACHE_TTL * 1000,
+      this.CACHE_TTL * 1000, // 30 minutes
     );
   }
 
   private async getSpeakingSessionData(
     sessionId: string,
   ): Promise<ChatSessionData | null> {
-    return this.cacheManager.get<ChatSessionData>(`speaking:${sessionId}`);
+    // First try to get from cache
+    const cachedData = await this.cacheManager.get<ChatSessionData>(
+      `speaking:${sessionId}`,
+    );
+
+    this.logger.log('cachedData');
+    this.logger.log(cachedData);
+
+    if (cachedData) {
+      return cachedData;
+    }
+
+    // If not in cache, try to get from database
+    const submission = await this.prisma.lessonSubmission.findFirst({
+      where: {
+        id: sessionId,
+        submissionType: 'speaking',
+        status: SubmissionStatus.draft,
+        ...notDeletedQuery,
+      },
+    });
+
+    if (submission) {
+      const content = submission.content as any;
+      const sessionData: ChatSessionData = {
+        systemPrompt: content.prompt || '',
+        history: content.messages || [],
+        lastActive: Date.now(),
+        messageCount: (content.messages || []).length / 2,
+        submissionId: sessionId,
+      };
+
+      // Store back in cache
+      await this.updateSpeakingSessionData(sessionId, sessionData);
+      this.logger.log('sessionData in db');
+      this.logger.log(sessionData);
+      return sessionData;
+    }
+
+    return null;
   }
 
   async checkSession(sessionId: string): Promise<CheckSessionResponseDto> {
@@ -95,6 +140,8 @@ ${dto.backgroundKnowledge ? `\nBackground knowledge to consider: ${dto.backgroun
     );
     return {
       status: !!sessionData,
+      history: sessionData?.history || [],
+      systemPrompt: sessionData?.systemPrompt,
     };
   }
 
@@ -377,7 +424,7 @@ Required format:
       const { topic, user_content, teacher_prompt } = dto;
 
       // Construct the prompt for the AI
-      const prompt = `You are an expert language teacher evaluating an essay. 
+      const prompt = `You are an expert language teacher evaluating an essay. You must provide explanations in Vietnamese language, while keeping English sentences as is.
       
 Topic: ${topic}
 
@@ -399,17 +446,21 @@ IMPORTANT: You must respond with ONLY a valid JSON object in the following forma
   "corrections": [
     {
       "id": "uuid",
-      "sentence": "the problematic sentence",
-      "error": "the specific error",
-      "suggestion": "the suggested correction",
-      "reason": "explanation of the error",
+      "sentence": "the problematic sentence in English",
+      "error": "the specific error in English",
+      "suggestion": "the suggested correction in English",
+      "reason": "explanation of the error in Vietnamese (viết bằng tiếng Việt)",
       "position": "the position of the error in the sentence"
     }
   ],
-  "overall_feedback": "comprehensive feedback on the essay"
+  "overall_feedback": "comprehensive feedback in Vietnamese (viết nhận xét tổng thể bằng tiếng Việt)"
 }
 
-DO NOT include any explanatory text outside the JSON structure. The response must be parseable JSON.`;
+IMPORTANT NOTES:
+- All explanations ("reason" and "overall_feedback") MUST be in Vietnamese
+- Keep all sentences, errors, and corrections in English
+- The response must be parseable JSON
+- Do not include any text outside the JSON structure`;
 
       // Maximum retry attempts
       const maxRetries = 3;
@@ -520,13 +571,30 @@ DO NOT include any explanatory text outside the JSON structure. The response mus
         throw new Error('Gemini model is not initialized.');
       }
 
-      const sessionId = uuidv4();
       const systemPrompt = this.buildSpeakingSystemPrompt(dto);
+      // Create a draft submission
+      const draftSubmission = await this.prisma.lessonSubmission.create({
+        data: {
+          lessonId: dto.lessonId,
+          userId: dto.userId,
+          submissionType: 'speaking',
+          status: SubmissionStatus.draft,
+          content: serializeJSON({
+            topic: dto.topicText,
+            prompt: dto.promptText,
+            messages: [],
+          }),
+          tokensUsed: 10,
+        },
+      });
+
+      const sessionId = draftSubmission.id;
       const sessionData: ChatSessionData = {
         systemPrompt,
         history: [],
         lastActive: Date.now(),
         messageCount: 0,
+        submissionId: sessionId,
       };
 
       await this.updateSpeakingSessionData(sessionId, sessionData);
@@ -534,6 +602,7 @@ DO NOT include any explanatory text outside the JSON structure. The response mus
       return {
         sessionId,
         topicText: dto.topicText,
+        submissionId: draftSubmission.id,
       };
     } catch (error) {
       throw new NotFoundException(
@@ -725,7 +794,6 @@ DO NOT include any explanatory text outside the JSON structure. The response mus
     const result = await chatSession.sendMessage(dto.message);
     const response = await result.response;
     const assistantMessage = response.text();
-    console.log('Test:', assistantMessage);
 
     // Chia nhỏ assistantMessage thành các chunk (ví dụ 100 ký tự)
     const chunks = assistantMessage.match(/.{1,100}/g) || [];
@@ -746,5 +814,42 @@ DO NOT include any explanatory text outside the JSON structure. The response mus
       );
     }
     await this.updateSpeakingSessionData(dto.sessionId, sessionData);
+
+    // Auto-save to draft submission
+    this.logger.log('Auto-saving to draft submission');
+    this.logger.log(sessionData.history);
+    this.logger.log(sessionData.submissionId);
+
+    if (sessionData.submissionId) {
+      await this.prisma.lessonSubmission.update({
+        where: { id: sessionData.submissionId },
+        data: {
+          content: serializeJSON({
+            prompt: sessionData.systemPrompt,
+            messages: sessionData.history,
+          }),
+        },
+      });
+    }
+  }
+
+  async checkSpeakingSession(
+    sessionId: string,
+  ): Promise<CheckSessionResponseDto> {
+    const sessionData = await this.getSpeakingSessionData(sessionId);
+    const data = {
+      status: !!sessionData,
+      history: sessionData?.history || [],
+      systemPrompt: sessionData?.systemPrompt,
+    };
+    console.log(JSON.stringify(data, null, 2));
+    return data;
+  }
+
+  async clearSpeakingSession(sessionId: string): Promise<{ message: string }> {
+    await this.cacheManager.del(`speaking:${sessionId}`);
+    return {
+      message: 'Session cleared successfully',
+    };
   }
 }

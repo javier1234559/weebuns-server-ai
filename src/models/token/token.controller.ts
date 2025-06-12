@@ -153,4 +153,14 @@ export class TokenController {
   approveWithdrawalRequest(@Param('requestId') requestId: string) {
     return this.tokenService.approveWithdrawalRequest(requestId);
   }
+
+  @Post('withdrawal-requests/:requestId/decline')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @ApiResponse({
+    status: 200,
+    type: TransactionResponse,
+  })
+  declineWithdrawalRequest(@Param('requestId') requestId: string) {
+    return this.tokenService.declineWithdrawalRequest(requestId);
+  }
 }

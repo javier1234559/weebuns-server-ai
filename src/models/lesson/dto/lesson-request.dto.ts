@@ -151,3 +151,35 @@ export class SubmitReadingLessonDto {
   @IsOptional()
   submitted_at?: string;
 }
+
+export class UpdateLessonDTO {
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  title?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  level?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  topic?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  thumbnailUrl?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  status?: ContentStatus;
+}

@@ -8,6 +8,7 @@ import {
   UpdateListeningDTO,
   UpdateSpeakingDTO,
   UpdateWritingDTO,
+  UpdateLessonDTO,
 } from 'src/models/lesson/dto/lesson-request.dto';
 import {
   LessonsResponse,
@@ -16,12 +17,14 @@ import {
   ListeningResponse,
   SpeakingResponse,
   WritingResponse,
+  BaseLessonResponse,
 } from 'src/models/lesson/dto/lesson-response.dto';
 
 export interface ILessonService {
   // Common methods
   findAll(query: FindAllLessonQuery): Promise<LessonsResponse>;
   delete(id: string): Promise<DeleteLessonResponse>;
+  updateLesson(id: string, dto: UpdateLessonDTO): Promise<BaseLessonResponse>;
 
   // Reading methods
   findOneReading(id: string): Promise<ReadingResponse>;

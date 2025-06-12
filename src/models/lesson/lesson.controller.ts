@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { LessonService } from './lesson.service';
-import { FindAllLessonQuery } from './dto/lesson-request.dto';
+import { FindAllLessonQuery, UpdateLessonDTO } from './dto/lesson-request.dto';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { UserRole } from 'src/common/decorators/role.decorator';
 import { RolesGuard } from 'src/common/auth/role.guard';
@@ -33,6 +33,7 @@ import {
   WritingResponse,
   SpeakingResponse,
   DeleteLessonResponse,
+  BaseLessonResponse,
 } from './dto/lesson-response.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { IAuthPayload } from 'src/common/interface/auth-payload.interface';
@@ -50,6 +51,16 @@ export class LessonController {
   @ApiResponse({ status: 200, type: LessonsResponse })
   findAll(@Query() query: FindAllLessonQuery): Promise<LessonsResponse> {
     return this.lessonService.findAll(query);
+  }
+
+  @Patch(':id')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @ApiResponse({ status: 200, type: LessonsResponse })
+  updateLesson(
+    @Param('id') id: string,
+    @Body() dto: UpdateLessonDTO,
+  ): Promise<BaseLessonResponse> {
+    return this.lessonService.updateLesson(id, dto);
   }
 
   @Delete(':id')
@@ -88,32 +99,6 @@ export class LessonController {
     dto.createdById = String(user.sub);
     return this.lessonService.updateReading(id, dto);
   }
-
-  // @Post('reading/:id/submit')
-  // @ApiResponse({
-  //   status: HttpStatus.CREATED,
-  //   type: ReadingSubmissionResponse,
-  // })
-  // submitReading(
-  //   @Param('id') id: string,
-  //   @CurrentUser() user: IAuthPayload,
-  //   @Body() dto: SubmitReadingLessonDto,
-  // ): Promise<ReadingSubmissionResponse> {
-  //   const userId = String(user.sub);
-  //   return this.lessonService.submitReading(id, userId, dto);
-  // }
-
-  // @Get('reading/:id/result/:submissionId')
-  // @ApiResponse({
-  //   status: HttpStatus.OK,
-  //   type: ReadingResultResponse,
-  // })
-  // getReadingResult(
-  //   @Param('id') id: string,
-  //   @Param('submissionId') submissionId: string,
-  // ): Promise<ReadingResultResponse> {
-  //   return this.lessonService.getReadingResult(id, submissionId);
-  // }
 
   @Get('listening/:id')
   @Public()

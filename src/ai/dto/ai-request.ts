@@ -2,36 +2,31 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
 
 export class StartSpeakingDto {
-  @ApiProperty({
-    description: 'Initial prompt for the AI',
-    example: "Let's practice speaking English",
-  })
+  @ApiProperty()
   @IsString()
-  @IsNotEmpty()
-  promptText: string;
+  lessonId: string;
 
-  @ApiProperty({
-    description: 'Topic to discuss',
-    example: 'Travel and Tourism',
-  })
+  @ApiProperty()
   @IsString()
-  @IsNotEmpty()
-  topicText: string;
+  userId: string;
 
-  @ApiProperty({
-    description: 'Example follow-up questions',
-    example: ['What places have you visited?', 'How was your last trip?'],
-  })
-  @IsArray()
+  @ApiProperty()
+  @IsString()
+  promptText?: string;
+
+  @ApiProperty()
+  @IsString()
+  topicText?: string;
+
+  @ApiProperty({ type: [String] })
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   followupExamples?: string[];
 
-  @ApiProperty({
-    description: 'Background knowledge for the topic',
-    example: 'Focus on travel experiences and cultural differences',
-  })
-  @IsString()
+  @ApiProperty()
   @IsOptional()
+  @IsString()
   backgroundKnowledge?: string;
 }
 

@@ -15,9 +15,9 @@ import {
   FindAllReadingSubmissionsByUserQuery,
   CreateReadingSubmissionDTO,
   CreateListeningSubmissionDTO,
-  CreateSpeakingSubmissionDTO,
   CreateWritingSubmissionDTO,
   UpdateWritingSubmissionDTO,
+  UpdateSpeakingSubmissionDTO,
 } from './dto/lesson-submission-request.dto';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { UserRole } from 'src/common/decorators/role.decorator';
@@ -115,15 +115,20 @@ export class LessonSubmissionController {
     return this.lessonSubmissionService.findOneSpeakingSubmission(id);
   }
 
-  @Post('speaking')
+  @Post('speaking/:id')
   @Roles(UserRole.USER)
   @ApiResponse({ status: 201, type: SpeakingSubmissionResponse })
-  createSpeaking(
-    @Body() dto: CreateSpeakingSubmissionDTO,
+  updateSpeaking(
+    @Param('id') id: string,
     @CurrentUser() user: IAuthPayload,
+    @Body() dto: UpdateSpeakingSubmissionDTO,
   ): Promise<SpeakingSubmissionResponse> {
     const userId = String(user.sub);
-    return this.lessonSubmissionService.createSpeakingSubmission(userId, dto);
+    return this.lessonSubmissionService.updateSpeakingSubmission(
+      id,
+      userId,
+      dto,
+    );
   }
 
   @Get('writing/:id')

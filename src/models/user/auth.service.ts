@@ -35,6 +35,7 @@ import {
   UserResponse,
 } from 'src/models/user/dto/auth-response.dto';
 import { AuthServiceInterface } from 'src/models/user/interface/auth-service.interface';
+import { TokenService } from '../token/token.service';
 
 @Injectable()
 export class AuthService implements AuthServiceInterface {
@@ -43,6 +44,7 @@ export class AuthService implements AuthServiceInterface {
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly mailService: MailService,
+    private readonly tokenService: TokenService,
   ) {}
 
   private readonly includeProfiles = {
@@ -259,6 +261,9 @@ export class AuthService implements AuthServiceInterface {
         include: this.includeProfiles,
       });
 
+      // Give welcome tokens to new user
+      await this.tokenService.giveWelcomeTokens(newUser.id);
+
       const { accessToken, refreshToken } = this.generateTokens(newUser);
       this.setRefreshTokenCookie(res, refreshToken);
 
@@ -403,6 +408,9 @@ export class AuthService implements AuthServiceInterface {
         },
         include: this.includeProfiles,
       });
+
+      // Give welcome tokens to new social login user
+      await this.tokenService.giveWelcomeTokens(user.id);
     }
 
     return user;

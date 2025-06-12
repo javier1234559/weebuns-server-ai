@@ -10,6 +10,7 @@ import {
   Res,
   UseGuards,
   UseInterceptors,
+  Delete,
 } from '@nestjs/common';
 import { ApiBody, ApiResponse, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CacheKeyDto } from 'src/common/decorators/cache-key.decorator';
@@ -249,5 +250,37 @@ export class AiController {
       res.write('data: [DONE]\n\n');
       res.end();
     }
+  }
+
+  @Get('speaking/check-session/:sessionId')
+  @Roles(UserRole.USER)
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: CheckSessionResponseDto,
+    description: 'Check if speaking session exists',
+  })
+  async checkSpeakingSession(
+    @Param('sessionId') sessionId: string,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<CheckSessionResponseDto> {
+    // Set cache control headers to prevent caching
+    response.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    response.setHeader('Pragma', 'no-cache');
+    response.setHeader('Expires', '0');
+
+    return this.aiService.checkSpeakingSession(sessionId);
+  }
+
+  @Delete('speaking/clear-session/:sessionId')
+  @Roles(UserRole.USER)
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: Object,
+    description: 'Clear speaking session',
+  })
+  async clearSpeakingSession(
+    @Param('sessionId') sessionId: string,
+  ): Promise<{ message: string }> {
+    return this.aiService.clearSpeakingSession(sessionId);
   }
 }

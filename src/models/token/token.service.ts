@@ -29,6 +29,8 @@ import { PaymentService } from 'src/models/payment/payment.service';
 import * as moment from 'moment';
 import { TokenPackage } from './entities/token-package.entity';
 
+const WELCOME_TOKENS = 30;
+
 @Injectable()
 export class TokenService implements ITokenService {
   constructor(
@@ -279,6 +281,7 @@ export class TokenService implements ITokenService {
       type = TransactionType.TOKEN_WITHDRAW,
       from,
       to,
+      userId,
     } = query;
 
     const where = {
@@ -291,6 +294,7 @@ export class TokenService implements ITokenService {
             lte: new Date(to),
           },
         }),
+      ...(userId && { userId }),
     };
 
     const [transactions, totalItems] = await Promise.all([
@@ -343,6 +347,38 @@ export class TokenService implements ITokenService {
     });
 
     await this.updateWalletBalance(transaction.userId, transaction.tokenAmount); // this already in negative
+
+    return { transaction };
+  }
+
+  async declineWithdrawalRequest(
+    requestId: string,
+  ): Promise<TransactionResponse> {
+    const transaction = await this.prisma.transaction.update({
+      where: { id: requestId },
+      data: { status: PaymentStatus.failed },
+    });
+    return { transaction };
+  }
+
+  async giveWelcomeTokens(userId: string): Promise<TransactionResponse> {
+    // Create transaction for welcome tokens
+    const transaction = await this.prisma.transaction.create({
+      data: {
+        transactionId: uuidv4(),
+        user: { connect: { id: userId } },
+        amount: 0,
+        tokenAmount: WELCOME_TOKENS,
+        paymentType: PaymentType.internal,
+        status: PaymentStatus.completed,
+        paymentDate: new Date(),
+        type: TransactionType.TOKEN_EARN,
+        reason: 'Welcome bonus for new user',
+      },
+    });
+
+    // Update user's wallet balance
+    await this.updateWalletBalance(userId, WELCOME_TOKENS);
 
     return { transaction };
   }

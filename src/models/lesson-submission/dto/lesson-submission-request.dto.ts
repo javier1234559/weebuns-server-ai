@@ -73,6 +73,11 @@ export class UpdateListeningSubmissionDTO extends BaseLessonSubmissionDTO {
 }
 
 export class CreateWritingSubmissionDTO extends BaseLessonSubmissionDTO {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEnum(SubmissionStatus)
+  status?: SubmissionStatus;
+
   @ApiProperty()
   @ValidateNested()
   @Type(() => ContentWritingSubmissionDTO)
@@ -101,6 +106,12 @@ export class CreateSpeakingSubmissionDTO extends BaseLessonSubmissionDTO {
 }
 
 export class UpdateSpeakingSubmissionDTO extends BaseLessonSubmissionDTO {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEnum(SubmissionStatus)
+  status?: SubmissionStatus;
+
+  @ApiProperty()
   @ApiPropertyOptional()
   @IsOptional()
   @ValidateNested()

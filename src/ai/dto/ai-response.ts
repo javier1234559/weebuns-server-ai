@@ -1,17 +1,17 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
+import { ChatMessageDto } from './chat.dto';
 
 export class StartSpeakingResponseDto {
-  @ApiProperty({
-    description: 'Session ID for continuing the conversation',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  @ApiProperty()
   sessionId: string;
 
-  @ApiProperty({
-    description: 'Topic of the conversation',
-    example: 'Travel and Tourism',
-  })
-  topicText: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  topicText?: string;
+
+  @ApiProperty()
+  submissionId: string;
 }
 
 export interface ChatSessionData {
@@ -22,6 +22,7 @@ export interface ChatSessionData {
   }>;
   lastActive: number;
   messageCount: number;
+  submissionId?: string;
 }
 
 export class RecommendAnswerResponseDto {
@@ -37,9 +38,12 @@ export class RecommendAnswerResponseDto {
 }
 
 export class CheckSessionResponseDto {
-  @ApiProperty({
-    description: 'Status of the session',
-    example: true,
-  })
+  @ApiProperty()
   status: boolean;
+
+  @ApiProperty({ type: [ChatMessageDto], required: false })
+  history?: ChatMessageDto[];
+
+  @ApiProperty({ required: false })
+  systemPrompt?: string;
 }

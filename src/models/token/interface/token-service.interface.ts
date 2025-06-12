@@ -11,6 +11,7 @@ import {
   TokenWalletResponse,
   TransactionResponse,
   TransactionsResponse,
+  TransactionWithUserResponse,
 } from '../dto/token-response.dto';
 
 export interface ITokenService {
@@ -39,6 +40,10 @@ export interface ITokenService {
     query: FindAllTransactionsQuery,
   ): Promise<TransactionsResponse>;
 
-  getWithdrawalRequestDetails(requestId: string): Promise<TransactionResponse>;
+  getWithdrawalRequestDetails(
+    requestId: string,
+  ): Promise<TransactionWithUserResponse>;
   approveWithdrawalRequest(requestId: string): Promise<TransactionResponse>;
+  declineWithdrawalRequest(requestId: string): Promise<TransactionResponse>;
+  giveWelcomeTokens(userId: string): Promise<TransactionResponse>;
 }

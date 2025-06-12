@@ -5,6 +5,7 @@ import { Type } from 'class-transformer';
 class ChatMessageDTO {
   @ApiProperty()
   @IsString()
+  @IsOptional()
   id: string;
 
   @ApiProperty({ enum: ['bot', 'user'] }) // Role có thể là 'bot' hoặc 'user'
@@ -22,6 +23,7 @@ class ChatMessageDTO {
 
   @ApiProperty()
   @IsString()
+  @IsOptional()
   timestamp: string;
 
   @ApiProperty({ type: [String], required: false }) // Mảng recommend_answer (chỉ bot có)

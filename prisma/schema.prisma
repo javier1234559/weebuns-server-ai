@@ -44,6 +44,7 @@ enum ContentStatus {
   published
   private
   deleted
+  pending
 }
 
 enum AuthProvider {
@@ -424,4 +425,14 @@ model StudyActivity {
   @@unique([userId, date])
   @@index([userId, date])
   @@map("study_activity")
+}
+
+model Banner {
+  id         String   @id @default(uuid()) @db.Uuid
+  title      String
+  orderIndex Int      @default(0) @map("order_index")
+  imageUrl   String
+  actionLink String
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 }

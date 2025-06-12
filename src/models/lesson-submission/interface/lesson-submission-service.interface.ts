@@ -2,10 +2,10 @@ import {
   CreateReadingSubmissionDTO,
   FindAllLessonSubmissionQuery,
   CreateListeningSubmissionDTO,
-  CreateSpeakingSubmissionDTO,
   CreateWritingSubmissionDTO,
   UpdateWritingSubmissionDTO,
   FindAllReadingSubmissionsByUserQuery,
+  UpdateSpeakingSubmissionDTO,
 } from '../dto/lesson-submission-request.dto';
 
 import {
@@ -45,9 +45,10 @@ export interface ILessonSubmissionService {
 
   // Speaking
   findOneSpeakingSubmission(id: string): Promise<SpeakingSubmissionResponse>;
-  createSpeakingSubmission(
+  updateSpeakingSubmission(
+    submissionId: string,
     userId: string,
-    dto: CreateSpeakingSubmissionDTO,
+    dto: UpdateSpeakingSubmissionDTO,
   ): Promise<SpeakingSubmissionResponse>;
 
   // Writing

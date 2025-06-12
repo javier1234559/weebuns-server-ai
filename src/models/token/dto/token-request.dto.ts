@@ -63,6 +63,11 @@ export class FindAllTransactionsQuery extends PaginationInputDto {
   @IsString()
   @IsOptional()
   to?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  userId?: string;
 }
 
 export class EarnTokensDto {
