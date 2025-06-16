@@ -9,4 +9,12 @@ export class ReadingFeedbackDto {
   incorrectAnswers: number;
   @ApiProperty()
   accuracy: number;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    type: String,
+    description: 'YouTube embed URL for solution/explanation video',
+  })
+  youtube_embed_url?: string | null;
 }

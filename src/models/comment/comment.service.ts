@@ -100,7 +100,7 @@ export class CommentService implements ICommentService {
           title: 'Bạn có lượt trả lời cho bình luận ' + parentComment.content,
           content: comment.content,
           thumbnailUrl: comment.user.profilePicture,
-          actionUrl: ``,
+          actionUrl: comment.actionLink || '',
         });
       } else {
         // Handle new comment notification
@@ -124,7 +124,7 @@ export class CommentService implements ICommentService {
             title: 'Bạn có bình luận mới tại bài học ' + lesson.title,
             content: comment.content,
             thumbnailUrl: comment.user.profilePicture,
-            actionUrl: ``,
+            actionUrl: comment.actionLink || '',
           });
         }
       }
@@ -144,6 +144,7 @@ export class CommentService implements ICommentService {
         parentId: data.parentId ?? null,
         content: data.content,
         userId,
+        actionLink: data.actionLink ?? null,
       },
       ...this.commentIncludeQuery,
     });

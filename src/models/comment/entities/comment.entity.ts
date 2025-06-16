@@ -21,6 +21,9 @@ export class Comment implements IComment {
   parentId: string | null;
 
   @ApiProperty()
+  actionLink: string | null;
+
+  @ApiProperty()
   createdAt: Date;
 
   @ApiProperty()

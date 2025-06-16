@@ -46,6 +46,12 @@ export class TeacherProfileEntity implements TeacherProfile {
     type: 'string',
     nullable: true,
   })
+  bankingqr_image_url: string | null;
+
+  @ApiProperty({
+    type: 'string',
+    nullable: true,
+  })
   other: string | null;
 
   @ApiProperty({

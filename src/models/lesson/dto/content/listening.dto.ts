@@ -25,6 +25,14 @@ export class ContentListeningDTO {
   @ApiProperty()
   audio_url: string;
 
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    type: String,
+    description: 'YouTube embed URL for solution/explanation video',
+  })
+  youtube_embed_url?: string | null;
+
   @ApiProperty({ type: [QuestionDTO] })
   @IsArray()
   @ValidateNested({ each: true })

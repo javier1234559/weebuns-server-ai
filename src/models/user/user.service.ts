@@ -174,6 +174,7 @@ export class UserService implements UserServiceInterface {
       introVideoUrlEmbed,
       certifications,
       teachingExperience,
+      bankingqr_image_url,
       other,
       ...userData
     } = teacherDto;
@@ -203,6 +204,7 @@ export class UserService implements UserServiceInterface {
             introVideoUrlEmbed,
             certifications,
             teachingExperience,
+            bankingqr_image_url,
             other,
           },
         },
@@ -236,6 +238,7 @@ export class UserService implements UserServiceInterface {
       introVideoUrlEmbed,
       certifications,
       teachingExperience,
+      bankingqr_image_url,
       other,
       username,
       email,
@@ -278,6 +281,7 @@ export class UserService implements UserServiceInterface {
           introVideoUrlEmbed,
           certifications,
           teachingExperience,
+          bankingqr_image_url,
           other,
         },
       },
@@ -324,6 +328,7 @@ export class UserService implements UserServiceInterface {
       introVideoUrlEmbed,
       certifications,
       teachingExperience,
+      bankingqr_image_url,
       other,
     } = data;
 
@@ -343,6 +348,7 @@ export class UserService implements UserServiceInterface {
                 introVideoUrlEmbed,
                 certifications,
                 teachingExperience,
+                bankingqr_image_url,
                 other,
               },
             }
@@ -352,6 +358,7 @@ export class UserService implements UserServiceInterface {
                 introVideoUrlEmbed,
                 certifications,
                 teachingExperience,
+                bankingqr_image_url,
                 other,
               },
             },

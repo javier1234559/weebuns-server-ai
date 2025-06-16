@@ -53,6 +53,11 @@ export class ProfileDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  bankingqr_image_url?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   other?: string;
 
   // Student Profile
@@ -252,6 +257,11 @@ export class UpdateProfileTeacherDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
+  bankingqr_image_url?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
   other?: string;
 }
 
@@ -336,6 +346,11 @@ export class TeacherDto {
   @IsOptional()
   @IsString()
   teachingExperience?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  bankingqr_image_url?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

@@ -237,8 +237,10 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       accuracy: formatNumberPrecision(
         (correctAnswers / dto.content.questions.length) * 100,
       ),
+      youtube_embed_url: dto.content.youtube_embed_url,
     };
 
+    console.log(JSON.stringify(feedback, null, 2));
     const submission = await this.prisma.lessonSubmission.create({
       data: {
         lessonId: dto.lessonId,
@@ -306,6 +308,7 @@ export class LessonSubmissionService implements ILessonSubmissionService {
       accuracy: formatNumberPrecision(
         (correctAnswers / dto.content.question_list.length) * 100,
       ),
+      youtube_embed_url: dto.content.youtube_embed_url,
     };
 
     const submission = await this.prisma.lessonSubmission.create({

@@ -1,4 +1,3 @@
-import { CacheInterceptor } from '@nestjs/cache-manager';
 import {
   Body,
   Controller,
@@ -9,7 +8,6 @@ import {
   Query,
   Res,
   UseGuards,
-  UseInterceptors,
   Delete,
 } from '@nestjs/common';
 import { ApiBody, ApiResponse, ApiTags, ApiOperation } from '@nestjs/swagger';
@@ -44,7 +42,6 @@ import { Public } from 'src/common/decorators/public.decorator';
 @Controller('ai')
 @ApiTags('ai')
 @UseGuards(AuthGuard, RolesGuard)
-@UseInterceptors(CacheInterceptor)
 export class AiController {
   constructor(
     private readonly aiService: AiService,
@@ -261,13 +258,7 @@ export class AiController {
   })
   async checkSpeakingSession(
     @Param('sessionId') sessionId: string,
-    @Res({ passthrough: true }) response: Response,
   ): Promise<CheckSessionResponseDto> {
-    // Set cache control headers to prevent caching
-    response.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    response.setHeader('Pragma', 'no-cache');
-    response.setHeader('Expires', '0');
-
     return this.aiService.checkSpeakingSession(sessionId);
   }
 

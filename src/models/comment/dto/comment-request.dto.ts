@@ -18,6 +18,13 @@ export class CreateCommentDto {
   @IsNotEmpty()
   content: string;
 
+  @ApiProperty({
+    description: 'Action link of the comment',
+  })
+  @IsString()
+  @IsOptional()
+  actionLink?: string;
+
   @ApiPropertyOptional({
     description: 'Parent comment ID if this is a reply',
   })

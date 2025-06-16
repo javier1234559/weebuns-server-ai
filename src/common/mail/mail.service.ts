@@ -16,7 +16,7 @@ export class MailService {
   async sendPasswordResetEmail(email: string, resetCode: string) {
     try {
       await this.resend.emails.send({
-        from: 'Weebuns Learning <no-reply@weebuns.blog>',
+        from: 'Weebuns Learning <no-reply@backend.waebuns.com>',
         to: email,
         subject: 'Password Reset Code',
         html: resetPasswordTemplate(resetCode),

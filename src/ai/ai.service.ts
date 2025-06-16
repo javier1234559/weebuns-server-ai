@@ -73,7 +73,7 @@ export class AiService implements AiServiceInterface {
     return `
 ${dto.promptText ? dto.promptText.trim() : ''}
 ${dto.topicText ? `\nTopic: "${dto.topicText.trim()}"` : ''}
-${dto.followupExamples?.length ? '\nAsk follow-up questions like:\n' + dto.followupExamples.map((q) => `- ${q}`).join('\n') : ''}
+${dto.followupExamples?.length ? '\nAsk follow-up questions like these one by one:\n' + dto.followupExamples.map((q) => `- ${q}`).join('\n') : ''}
 ${dto.backgroundKnowledge ? `\nBackground knowledge to consider: ${dto.backgroundKnowledge.trim()}` : ''}
 `.trim();
   }
@@ -96,9 +96,6 @@ ${dto.backgroundKnowledge ? `\nBackground knowledge to consider: ${dto.backgroun
     const cachedData = await this.cacheManager.get<ChatSessionData>(
       `speaking:${sessionId}`,
     );
-
-    this.logger.log('cachedData');
-    this.logger.log(cachedData);
 
     if (cachedData) {
       return cachedData;
@@ -433,7 +430,7 @@ Student's Essay:
 ${user_content}
 ---
 
-${teacher_prompt ? `Additional Instructions: ${teacher_prompt}\n` : ''}
+${teacher_prompt ? `Additional Instructions and rules you must follow: ${teacher_prompt}\n` : ''}
 ---
 IMPORTANT: You must respond with ONLY a valid JSON object in the following format, with no additional text before or after:
 
@@ -460,6 +457,7 @@ IMPORTANT NOTES:
 - All explanations ("reason" and "overall_feedback") MUST be in Vietnamese
 - Keep all sentences, errors, and corrections in English
 - The response must be parseable JSON
+- You must follow the additional instructions and rules provided by the teacher
 - Do not include any text outside the JSON structure`;
 
       // Maximum retry attempts
@@ -476,7 +474,7 @@ IMPORTANT NOTES:
             {
               role: 'system',
               content:
-                'You are an expert language teacher evaluating essays. You must respond with ONLY a valid JSON object in the specified format, with no additional text. Never include explanations outside the JSON structure. Your response must be parseable JSON.',
+                'You are an expert language teacher evaluating essays. You must respond with ONLY a valid JSON object in the specified format, with no additional text. Never include explanations outside the JSON structure. Your response must be parseable JSON. You must follow the additional instructions and rules provided by the teacher.',
             },
             {
               role: 'user',
@@ -685,7 +683,7 @@ IMPORTANT NOTES:
     dto: RecommendAnswerDto,
   ): Promise<RecommendAnswerResponseDto> {
     try {
-      console.log(dto);
+      console.log('Starting recommendAnswer with sessionId:', dto.sessionId);
 
       if (!this.geminiModel) {
         throw new Error('Gemini model is not initialized.');
@@ -696,10 +694,32 @@ IMPORTANT NOTES:
         throw new NotFoundException('Session not found or expired');
       }
 
+      console.log('Retrieved session data:', {
+        systemPrompt: sessionData.systemPrompt,
+        historyLength: sessionData.history.length,
+        messageCount: sessionData.messageCount,
+      });
+
+      // Get the last few messages for immediate context
+      const recentMessages = sessionData.history.slice(-4);
+      console.log('Recent messages:', recentMessages);
+
+      const lastAssistantMessage =
+        [...recentMessages].reverse().find((msg) => msg.role === 'assistant')
+          ?.content || '';
+      const lastUserMessage =
+        [...recentMessages].reverse().find((msg) => msg.role === 'user')
+          ?.content || '';
+
+      console.log('Extracted context:', {
+        lastAssistantMessage,
+        lastUserMessage,
+      });
+
       const chatConfig: any = {
         generationConfig: {
           maxOutputTokens: 2048,
-          temperature: 0.7,
+          temperature: 0.9,
         },
         history: [
           {
@@ -713,15 +733,44 @@ IMPORTANT NOTES:
         ],
       };
 
+      console.log('Starting chat session with config:', {
+        systemPrompt: sessionData.systemPrompt,
+        historyLength: chatConfig.history.length,
+      });
+
       const chatSession = this.geminiModel.startChat(chatConfig);
 
-      const prompt = `You are a JSON API recommend answer for user. Return ONLY a JSON array with exactly 3 strings. No markdown, no code blocks, no additional text.
-  Example: ["response1", "response2", "response3"]`;
+      const prompt = `As an AI language tutor, analyze the conversation history and help the student respond to the last message.
+
+Current conversation context:
+- Original topic/prompt: "${sessionData.systemPrompt}"
+- Last AI message: "${lastAssistantMessage}"
+- Last student message: "${lastUserMessage}"
+
+Based on this specific conversation context, generate 3 different natural responses that the student could use to continue the conversation.
+
+Requirements for responses:
+1. Each response should directly relate to the last messages in the conversation
+2. Vary in complexity and approach:
+   - One should be simple and direct
+   - One should be more detailed and elaborate
+   - One should ask a follow-up question or introduce a related point
+3. Must maintain conversation flow and topic relevance
+4. Should help practice vocabulary and grammar naturally
+5. Must be appropriate for the current discussion context
+
+Return ONLY a JSON array with exactly 3 response strings. No additional text or formatting.`;
+
+      console.log('Sending prompt to Gemini:', prompt);
 
       const result = await chatSession.sendMessage(prompt);
+      console.log('Received result from Gemini');
+
       const response = await result.response;
+      console.log('Processed Gemini response');
 
       const rawText = response.text();
+      console.log('Raw response text:', rawText);
 
       // Xử lý chuỗi trả về: xóa ```json hoặc ``` nếu có
       const cleanedText = rawText
@@ -732,8 +781,9 @@ IMPORTANT NOTES:
       let parsed: string[];
       try {
         parsed = JSON.parse(cleanedText);
+        console.log('Successfully parsed response:', parsed);
       } catch (err: any) {
-        console.log(err);
+        console.error('Failed to parse response:', err);
         throw new Error('Failed to parse JSON from Gemini output');
       }
 
@@ -742,6 +792,7 @@ IMPORTANT NOTES:
         parsed.length !== 3 ||
         !parsed.every((item) => typeof item === 'string')
       ) {
+        console.error('Invalid response format:', parsed);
         throw new Error('AI response is not a valid array of 3 strings');
       }
 
@@ -750,6 +801,7 @@ IMPORTANT NOTES:
         sessionId: dto.sessionId,
       };
     } catch (error) {
+      console.error('Error in recommendAnswer:', error);
       throw new NotFoundException(
         `Failed to recommend answers: ${error.message}`,
       );

@@ -28,6 +28,14 @@ export class ContentReadingDTO {
   @ApiProperty()
   text: string;
 
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    type: String,
+    description: 'YouTube embed URL for solution/explanation video',
+  })
+  youtube_embed_url?: string | null;
+
   @ApiProperty({ type: [QuestionDTO] })
   @IsArray()
   @ValidateNested({ each: true })

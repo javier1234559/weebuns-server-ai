@@ -159,11 +159,12 @@ model TeacherProfile {
   id     String @id @default(uuid()) @db.Uuid
   userId String @unique @map("user_id") @db.Uuid
 
-  longBio            String? @map("long_bio")
-  introVideoUrlEmbed String? @map("intro_video_url_embed")
-  certifications     String? @map("certifications")
-  teachingExperience String? @map("teaching_experience")
-  other              String? @map("other")
+  longBio             String? @map("long_bio")
+  introVideoUrlEmbed  String? @map("intro_video_url_embed")
+  certifications      String? @map("certifications")
+  teachingExperience  String? @map("teaching_experience")
+  bankingqr_image_url String? @map("bankingqr_image_url")
+  other               String? @map("other")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -296,6 +297,7 @@ model Comment {
   userId       String    @map("user_id") @db.Uuid
   content      String
   parentId     String?   @map("parent_id") @db.Uuid
+  actionLink   String?   @map("action_link")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   deletedAt    DateTime? @map("deleted_at")

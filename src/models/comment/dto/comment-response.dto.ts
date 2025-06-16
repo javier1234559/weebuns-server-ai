@@ -67,6 +67,9 @@ export class CommentResponse {
   @ApiProperty()
   lessonSubmissionId: string | null;
 
+  @ApiProperty()
+  actionLink: string | null;
+
   @ApiProperty({ type: CommentUserResponse })
   user: CommentUserResponse;
 

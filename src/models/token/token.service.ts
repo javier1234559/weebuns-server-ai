@@ -255,11 +255,13 @@ export class TokenService implements ITokenService {
       throw new BadRequestException('Insufficient token balance');
     }
 
+    const amount = tokenAmount * 1000 * 0.8; // Each token is 1000 VND, apply 20% fee
+
     const transaction = await this.prisma.transaction.create({
       data: {
         transactionId: uuidv4(),
         user: { connect: { id: userId } },
-        amount: 0,
+        amount: amount,
         tokenAmount: -tokenAmount,
         paymentType: PaymentType.internal,
         status: PaymentStatus.pending,
