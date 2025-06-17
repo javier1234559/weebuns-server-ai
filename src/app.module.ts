@@ -12,6 +12,8 @@ import { NotificationModule } from 'src/models/notification/notification.module'
 import { StudyActivityModule } from './models/study-activity/study-activity.module';
 import { HealthModule } from './common/health/health.module';
 import { BannerModule } from './models/banner/banner.module';
+import { StatsModule } from './models/stats/stats.module';
+
 @Module({
   imports: [
     HealthModule,
@@ -27,6 +29,7 @@ import { BannerModule } from './models/banner/banner.module';
     NotificationModule,
     StudyActivityModule,
     BannerModule,
+    StatsModule,
   ],
   controllers: [],
   providers: [],

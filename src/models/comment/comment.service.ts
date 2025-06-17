@@ -26,6 +26,7 @@ import { calculatePagination } from 'src/common/utils/pagination';
 import { ReactionType } from '@prisma/client';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { getCommentIdentifierId } from './helper';
+import config from 'src/config';
 
 @Injectable()
 export class CommentService implements ICommentService {
@@ -114,18 +115,52 @@ export class CommentService implements ICommentService {
           });
 
           if (!lesson) {
-            console.error('Lesson not found for notification:', identifierId);
-            return;
-          }
+            // Handle submission notification
+            const submission = await this.prisma.lessonSubmission.findFirst({
+              where: {
+                id: identifierId,
+                ...notDeletedQuery,
+              },
+              include: {
+                lesson: {
+                  select: {
+                    id: true,
+                    title: true,
+                    thumbnailUrl: true,
+                    createdById: true,
+                  },
+                },
+              },
+            });
 
-          this.eventEmitter.emit('comment.created', {
-            createdBy: comment.userId,
-            userId: lesson.createdById,
-            title: 'Bạn có bình luận mới tại bài học ' + lesson.title,
-            content: comment.content,
-            thumbnailUrl: comment.user.profilePicture,
-            actionUrl: comment.actionLink || '',
-          });
+            if (!submission) {
+              console.error(
+                'Neither lesson nor submission found for notification:',
+                identifierId,
+              );
+              return;
+            }
+
+            this.eventEmitter.emit('comment.created', {
+              createdBy: comment.userId,
+              userId: submission?.lesson?.createdById,
+              title:
+                'Bạn có bình luận mới tại bài chấm ' + submission.lesson.title,
+              content: comment.content,
+              thumbnailUrl: submission.lesson.thumbnailUrl,
+              actionUrl: `${config.client_url}/lesson/writing/${submission.lessonId}/result?submissionId=${submission.id}`,
+            });
+          } else {
+            // Handle lesson notification
+            this.eventEmitter.emit('comment.created', {
+              createdBy: comment.userId,
+              userId: lesson.createdById,
+              title: 'Bạn có bình luận mới tại bài học ' + lesson.title,
+              content: comment.content,
+              thumbnailUrl: comment.user.profilePicture,
+              actionUrl: comment.actionLink || '',
+            });
+          }
         }
       }
     } catch (error) {
